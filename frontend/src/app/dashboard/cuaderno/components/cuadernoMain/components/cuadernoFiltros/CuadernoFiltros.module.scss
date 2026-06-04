@@ -1,0 +1,67 @@
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 1.25rem;
+  background: oklch(0.14 0.01 220 / 0.8);
+  border: 1px solid oklch(1 0 0 / 0.07);
+  border-radius: var(--radius-lg);
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: oklch(0.42 0 0);
+    font-weight: 500;
+  }
+
+  &__select,
+  &__input {
+    padding: 7px 10px;
+    font-size: 0.875rem;
+    color: oklch(0.8 0 0);
+    background: oklch(0.18 0.01 200 / 0.8);
+    border: 1px solid oklch(1 0 0 / 0.1);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+
+    &:focus {
+      border-color: oklch(0.55 0.15 150 / 0.5);
+    }
+
+    option {
+      background: oklch(0.16 0.01 220);
+    }
+  }
+
+  &__clear {
+    padding: 7px 14px;
+    font-size: 0.8125rem;
+    color: oklch(0.5 0 0);
+    background: none;
+    border: 1px solid oklch(1 0 0 / 0.08);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+    align-self: flex-end;
+
+    &:hover {
+      color: oklch(0.7 0 0);
+      border-color: oklch(1 0 0 / 0.15);
+    }
+  }
+}

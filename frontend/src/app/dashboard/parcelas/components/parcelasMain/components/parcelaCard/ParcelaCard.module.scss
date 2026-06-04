@@ -1,0 +1,114 @@
+.card {
+  background: oklch(0.14 0.01 220 / 0.8);
+  border: 1px solid oklch(1 0 0 / 0.07);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+
+  &:hover {
+    border-color: oklch(0.55 0.15 150 / 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px oklch(0 0 0 / 0.3);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+  }
+
+  &__delete {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    background: none;
+    border: 1px solid oklch(1 0 0 / 0.1);
+    border-radius: var(--radius-md);
+    color: oklch(0.45 0 0);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+
+    &:hover {
+      border-color: oklch(0.6 0.18 25 / 0.5);
+      color: oklch(0.7 0.18 25);
+      background: oklch(0.5 0.18 25 / 0.08);
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+  }
+
+  &__name {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: oklch(0.9 0 0);
+    letter-spacing: -0.01em;
+  }
+
+  &__cultivo {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    background: oklch(0.55 0.15 150 / 0.12);
+    color: oklch(0.7 0.1 150);
+    border: 1px solid oklch(0.55 0.15 150 / 0.2);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &__item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    &__label {
+      font-size: 0.75rem;
+      color: oklch(0.45 0 0);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 500;
+    }
+
+    &__value {
+      font-size: 0.8125rem;
+      color: oklch(0.72 0 0);
+      font-family: var(--font-mono);
+      text-align: right;
+    }
+  }
+
+  &__footer {
+    padding-top: 0.875rem;
+    border-top: 1px solid oklch(1 0 0 / 0.06);
+  }
+
+  &__cta {
+    font-size: 0.8125rem;
+    color: oklch(0.6 0.1 150);
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+
+  &:hover &__cta {
+    color: oklch(0.75 0.12 150);
+  }
+}

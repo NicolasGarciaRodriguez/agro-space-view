@@ -1,0 +1,133 @@
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(ellipse at 15% 50%, oklch(0.25 0.08 150 / 0.15) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 20%, oklch(0.25 0.06 220 / 0.12) 0%, transparent 50%),
+    oklch(0.1 0.01 220);
+}
+
+.wizard {
+  width: 100%;
+  max-width: 560px;
+  background: oklch(0.14 0.01 220 / 0.9);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.04),
+    0 24px 48px oklch(0 0 0 / 0.4),
+    0 0 80px oklch(0.55 0.15 150 / 0.06);
+  overflow: hidden;
+
+  &__header {
+    padding: 1.75rem 2rem 0;
+    border-bottom: 1px solid oklch(1 0 0 / 0.06);
+    padding-bottom: 1.5rem;
+  }
+
+  &__body {
+    padding: 2rem;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.75rem;
+
+  &__icon {
+    font-size: 1.25rem;
+  }
+
+  &__text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: oklch(0.9 0 0);
+    letter-spacing: -0.01em;
+  }
+}
+
+.steps {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+
+    &--active &__bubble {
+      background: oklch(0.55 0.15 150);
+      border-color: oklch(0.55 0.15 150);
+      color: oklch(0.98 0 0);
+      box-shadow: 0 0 12px oklch(0.55 0.15 150 / 0.4);
+    }
+
+    &--done &__bubble {
+      background: oklch(0.45 0.12 150);
+      border-color: oklch(0.45 0.12 150);
+      color: oklch(0.98 0 0);
+    }
+
+    &--done &__label,
+    &--active &__label {
+      color: oklch(0.85 0 0);
+    }
+  }
+
+  &__bubble {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid oklch(1 0 0 / 0.2);
+    background: transparent;
+    color: oklch(0.5 0 0);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: oklch(0.45 0 0);
+    transition: color 0.2s ease;
+    white-space: nowrap;
+  }
+
+  &__line {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    right: 14px;
+    height: 1.5px;
+    background: oklch(1 0 0 / 0.08);
+    transform: translateY(-50%);
+    z-index: 0;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: var(--progress, 0%);
+      background: oklch(0.55 0.15 150);
+      transition: width 0.4s ease;
+    }
+  }
+}

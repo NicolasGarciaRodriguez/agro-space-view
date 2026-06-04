@@ -1,0 +1,66 @@
+.insights {
+  background: oklch(0.14 0.01 220 / 0.8);
+  border: 1px solid oklch(1 0 0 / 0.07);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: oklch(0.9 0 0);
+  }
+
+  &__subtitle {
+    font-size: 0.8125rem;
+    color: oklch(0.5 0 0);
+  }
+
+  &__badge {
+    margin-left: auto;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    background: oklch(0.55 0.15 150 / 0.15);
+    color: oklch(0.7 0.12 150);
+    border: 1px solid oklch(0.55 0.15 150 / 0.25);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+  }
+
+  &__placeholder {
+    &__text {
+      font-size: 0.875rem;
+      color: oklch(0.52 0 0);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+  }
+
+  &__examples {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__example {
+    font-size: 0.875rem;
+    color: oklch(0.6 0 0);
+    padding: 10px 14px;
+    background: oklch(0.18 0.01 200 / 0.5);
+    border: 1px solid oklch(1 0 0 / 0.05);
+    border-radius: var(--radius-md);
+    opacity: 0.6;
+    font-style: italic;
+  }
+}

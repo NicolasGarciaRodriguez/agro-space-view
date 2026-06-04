@@ -1,0 +1,73 @@
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    color: oklch(0.5 0 0);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    transition: color 0.15s;
+    align-self: flex-start;
+
+    &:hover {
+      color: oklch(0.75 0 0);
+    }
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 6rem 0;
+
+  &__spinner {
+    width: 32px;
+    height: 32px;
+    border: 2.5px solid oklch(1 0 0 / 0.1);
+    border-top-color: oklch(0.55 0.15 150);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 0;
+  text-align: center;
+
+  &__text {
+    font-size: 0.9375rem;
+    color: oklch(0.7 0.18 25);
+  }
+
+  &__back {
+    font-size: 0.875rem;
+    color: oklch(0.6 0.1 150);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s;
+
+    &:hover {
+      color: oklch(0.75 0.12 150);
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

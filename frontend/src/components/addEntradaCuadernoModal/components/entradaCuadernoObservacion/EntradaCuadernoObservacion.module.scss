@@ -1,0 +1,42 @@
+.observacion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: oklch(0.75 0.04 150);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  &__textarea {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: oklch(0.92 0 0);
+    background: oklch(0.16 0.01 200 / 0.8);
+    border: 1px solid oklch(1 0 0 / 0.1);
+    border-radius: var(--radius-md);
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.15s;
+
+    &::placeholder {
+      color: oklch(0.55 0 0);
+    }
+
+    &:focus {
+      border-color: oklch(0.65 0.15 150);
+      box-shadow: 0 0 0 3px oklch(0.65 0.15 150 / 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

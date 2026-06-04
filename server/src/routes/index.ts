@@ -1,0 +1,22 @@
+import type { FastifyInstance } from "fastify";
+import AuthRoutes from "../modules/auth/Auth.routes.js";
+import NdviRoutes from "../modules/ndvi/Ndvi.routes.js";
+import StacRoutes from "../modules/stac/Stac.routes.js";
+import CatastroRoutes from "../modules/catastro/Catastro.routes.js";
+import WeatherRoutes from "../modules/weather/Weather.routes.js";
+import ExplotacionRoutes from "../modules/explotacion/Explotacion.routes.js";
+import ParcelaRoutes from "../modules/parcela/Parcela.routes.js";
+import AnalisisNdviRoutes from "../modules/analisisNdvi/AnalisisNdvi.routes.js";
+import CuadernoEntradaRoutes from "../modules/cuadernoEntrada/CuadernoEntrada.routes.js";
+
+export default async function routes(fastify: FastifyInstance) {
+  await fastify.register(AuthRoutes);
+  await fastify.register(StacRoutes);
+  await fastify.register(NdviRoutes);
+  await fastify.register(CatastroRoutes);
+  await fastify.register(WeatherRoutes);
+  await fastify.register(ExplotacionRoutes);
+  await fastify.register(ParcelaRoutes);
+  await fastify.register(AnalisisNdviRoutes);
+  await fastify.register(CuadernoEntradaRoutes);
+}

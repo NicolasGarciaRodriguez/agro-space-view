@@ -1,0 +1,38 @@
+.dashboard {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 0% 0%, oklch(0.2 0.06 150 / 0.08) 0%, transparent 50%),
+    oklch(0.1 0.01 220);
+
+  &__main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+.loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.1 0.01 220);
+
+  &__spinner {
+    width: 36px;
+    height: 36px;
+    border: 2.5px solid oklch(1 0 0 / 0.1);
+    border-top-color: oklch(0.55 0.15 150);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

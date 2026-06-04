@@ -1,0 +1,29 @@
+{
+  "name": "agrospace",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "yarn workspaces run dev",
+    "dev:frontend": "yarn workspace frontend dev",
+    "dev:server": "yarn workspace server dev",
+    "prod:frontend": "dotenv -e frontend/.env.prod -- yarn workspace frontend dev",
+    "prod:build:frontend": "dotenv -e frontend/.env.prod -- yarn workspace frontend build",
+    "prod:start:frontend": "dotenv -e frontend/.env.prod -- yarn workspace frontend start",
+    "build": "yarn workspace @agrospace/shared build && yarn workspace frontend build && yarn workspace server build",
+    "build:shared": "yarn workspace @agrospace/shared build",
+    "lint": "yarn workspaces run lint",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20",
+    "yarn": ">=1.22"
+  }
+}

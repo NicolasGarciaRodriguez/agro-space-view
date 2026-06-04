@@ -1,0 +1,20 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: agrospace-mongo-local
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: agrospace
+      MONGO_INITDB_ROOT_PASSWORD: agrospace
+      MONGO_INITDB_DATABASE: agrospace
+    ports:
+      - "27017:27017"
+    volumes:
+      - agrospace_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  agrospace_mongo_data:
