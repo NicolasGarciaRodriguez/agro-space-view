@@ -80,7 +80,10 @@ export const NdviChart = ({ points }: NdviChartProps) => {
             width={40}
           />
           <Tooltip
-            formatter={(value: number) => [formatNdvi(value), "NDVI medio"]}
+            formatter={(value) => [
+              typeof value === "number" ? formatNdvi(value) : "—",
+              "NDVI medio",
+            ]}
             labelStyle={{ fontSize: 12 }}
             contentStyle={{
               fontSize: 12,
