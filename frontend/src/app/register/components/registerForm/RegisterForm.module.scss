@@ -1,3 +1,5 @@
+@import "@/styles/settings/_screen-types";
+
 .wrapper {
   min-height: 100vh;
   display: flex;
@@ -88,7 +90,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 
-    @media (max-width: 480px) {
+    @media (max-width: $mobile) {
       grid-template-columns: 1fr;
     }
   }

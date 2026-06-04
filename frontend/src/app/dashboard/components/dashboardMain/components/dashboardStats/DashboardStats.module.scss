@@ -1,16 +1,17 @@
+@import "@/styles/settings/_screen-types";
+
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 
-  @media (max-width: 900px) {
+  @media (max-width: $tablet) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: $mobile) {
     grid-template-columns: 1fr;
   }
-
   &__card {
     display: flex;
     align-items: flex-start;

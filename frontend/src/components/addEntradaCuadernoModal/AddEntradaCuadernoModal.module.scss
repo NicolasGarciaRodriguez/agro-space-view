@@ -1,3 +1,5 @@
+@import "@/styles/settings/_screen-types";
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -89,7 +91,7 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
 
-  @media (max-width: 480px) {
+  @media (max-width: $mobile) {
     grid-template-columns: repeat(3, 1fr);
   }
 

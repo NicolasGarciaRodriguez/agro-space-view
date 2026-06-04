@@ -1,7 +1,8 @@
-.layout {
-  display: flex;
+@import "@/styles/settings/_screen-types";
+
+.layout {  display: flex;
   min-height: 100vh;
-  background: oklch(0.1 0.01 220);
+  background: oklch(0.12 0.015 220);
 
   &__content {
     flex: 1;
@@ -10,14 +11,13 @@
     display: flex;
     flex-direction: column;
 
-    @media (max-width: 1024px) and (min-width: 768px) {
+    @media (min-width: $tablet) and (max-width: $below-desktop) {
       margin-left: 64px;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: $tablet) {
       margin-left: 0;
-    }
-  }
+    }  }
 
   &__main {
     flex: 1;
@@ -26,8 +26,7 @@
     width: 100%;
     margin: 0 auto;
 
-    @media (max-width: 768px) {
+    @media (max-width: $tablet) {
       padding: 1.25rem 1rem;
-    }
-  }
+    }  }
 }

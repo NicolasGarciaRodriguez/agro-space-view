@@ -1,3 +1,5 @@
+@import "@/styles/settings/_screen-types";
+
 .step {
   &__header {
     text-align: center;
@@ -35,7 +37,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 
-    @media (max-width: 480px) {
+    @media (max-width: $mobile) {
       grid-template-columns: 1fr;
     }
   }

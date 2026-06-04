@@ -1,5 +1,6 @@
-.topbar {
-  display: none;
+@import "@/styles/settings/_screen-types";
+
+.topbar {  display: none;
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
@@ -10,10 +11,9 @@
   top: 0;
   z-index: 100;
 
-  @media (max-width: 768px) {
+  @media (max-width: $tablet) {
     display: flex;
   }
-
   &__menu {
     font-size: 1.25rem;
     background: none;
