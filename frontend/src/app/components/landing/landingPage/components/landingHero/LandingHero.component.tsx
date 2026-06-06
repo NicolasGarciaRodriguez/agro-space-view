@@ -40,7 +40,6 @@ export const LandingHero = () => {
         "-=0.4",
       );
 
-    // Rotación continua del satélite
     gsap.to(orbitRef.current, {
       rotation: 360,
       duration: 20,
@@ -55,7 +54,6 @@ export const LandingHero = () => {
 
   return (
     <section ref={heroRef} className={styles.hero}>
-      {/* Fondo con imagen satelital */}
       <div className={styles.hero__bg}>
         <img
           src="/images/hero-satellite.jpg"
@@ -65,10 +63,8 @@ export const LandingHero = () => {
         <div className={styles.hero__bgOverlay} />
       </div>
 
-      {/* Grid decorativo */}
       <div className={styles.hero__grid} aria-hidden="true" />
 
-      {/* Órbita decorativa */}
       <div ref={orbitRef} className={styles.hero__orbit} aria-hidden="true">
         <div className={styles.hero__satellite}>🛰</div>
       </div>
@@ -101,7 +97,6 @@ export const LandingHero = () => {
         </div>
       </div>
 
-      {/* Scroll indicator */}
       <div className={styles.hero__scroll}>
         <span className={styles.hero__scroll__line} />
         <span className={styles.hero__scroll__text}>scroll</span>

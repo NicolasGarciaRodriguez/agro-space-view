@@ -10,12 +10,10 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("agrospaceview-token")?.value;
   const isAuthenticated = !!token;
 
-  // Raíz → siempre muestra la landing
   if (pathname === "/") {
     return NextResponse.next();
   }
 
-  // Rutas públicas — si ya está autenticado redirige al dashboard
   if (PUBLIC_ROUTES.includes(pathname)) {
     if (isAuthenticated) {
       return NextResponse.redirect(new URL(DASHBOARD_ROUTE, request.url));
@@ -23,7 +21,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Rutas protegidas — si no está autenticado redirige al login
   if (!isAuthenticated) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -32,5 +29,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|images).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|images|frames).*)"],
 };

@@ -5,7 +5,6 @@ import { LandingFeatures } from "./components/landingFeatures/LandingFeatures.co
 import { LandingCTA } from "./components/landingCTA/LandingCTA.component";
 import { LandingHero } from "./components/landingHero/LandingHero.component";
 
-// SSR false para GSAP
 const LandingScroll = dynamic(
   () =>
     import("./components/landingScroll/LandingScroll.component").then(

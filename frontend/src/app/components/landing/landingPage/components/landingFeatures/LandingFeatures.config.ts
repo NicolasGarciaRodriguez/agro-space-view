@@ -1,0 +1,35 @@
+export const FEATURES = [
+  {
+    icon: "🛰",
+    label: "Satélite",
+    title: "Imágenes reales de Sentinel-2",
+    body: "Accede a imágenes satelitales gratuitas con 10m de resolución, actualizadas cada 5 días para cualquier parcela de España.",
+    stat: "10m",
+    statLabel: "resolución",
+  },
+  {
+    icon: "🌿",
+    label: "NDVI",
+    title: "Análisis de vegetación en tiempo real",
+    body: "Detecta estrés hídrico, enfermedades y zonas de baja productividad semanas antes de que sean visibles a simple vista.",
+    stat: "5 días",
+    statLabel: "actualización",
+  },
+  {
+    icon: "📓",
+    label: "Cuaderno",
+    title: "Cuaderno de campo digital",
+    body: "Registra riegos, fertilizaciones, tratamientos y cosechas. Cruza tus datos de campo con el análisis satelital.",
+    stat: "100%",
+    statLabel: "trazabilidad",
+  },
+  {
+    icon: "🤖",
+    label: "IA",
+    title: "Inteligencia artificial agrícola",
+    body: "Próximamente: recomendaciones personalizadas basadas en tus datos de campo, el NDVI y las condiciones climáticas.",
+    stat: "Soon",
+    statLabel: "disponible",
+    soon: true,
+  },
+];
