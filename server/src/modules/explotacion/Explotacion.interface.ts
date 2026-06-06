@@ -1,6 +1,5 @@
 import type { FastifyRequest } from "fastify";
 
-
 export interface CreateExplotacionBody {
   nombre: string;
   provincia: string;
@@ -15,11 +14,9 @@ export interface UpdateExplotacionBody {
   descripcion?: string;
 }
 
-
 export interface ExplotacionParams {
   id: string;
 }
-
 
 export type CreateExplotacionRequest = FastifyRequest<{
   Body: CreateExplotacionBody;
@@ -38,6 +35,13 @@ export type DeleteExplotacionRequest = FastifyRequest<{
   Params: ExplotacionParams;
 }>;
 
+export interface GetExplotacionStatsParams {
+  id: string;
+}
+
+export type GetExplotacionStatsRequest = FastifyRequest<{
+  Params: GetExplotacionStatsParams;
+}>;
 
 export class ExplotacionNotFoundError extends Error {
   constructor() {

@@ -22,3 +22,18 @@ export interface ExplotacionDTO {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ParcelaStatDTO {
+  nombre: string;
+  ndvi: number;
+}
+
+export interface ExplotacionStatsDTO {
+  totalParcelas: number;
+  parcelasAnalizadas: number;
+  ndviMedio: number | null;
+  ultimoAnalisis: string | null;
+  diasSinAnalizar: number | null;
+  parcelaMejor: ParcelaStatDTO | null;
+  parcelaPeor: ParcelaStatDTO | null;
+}

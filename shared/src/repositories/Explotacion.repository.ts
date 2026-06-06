@@ -4,6 +4,7 @@ import type {
   CreateExplotacionDTO,
   UpdateExplotacionDTO,
   ExplotacionDTO,
+  ExplotacionStatsDTO,
 } from "../dtos/Explotacion.dto";
 
 const BASE = `${config.API_URL}/api/explotaciones`;
@@ -31,10 +32,15 @@ const remove = async (id: string): Promise<void> => {
   await HttpService.delete(`${BASE}/${id}`);
 };
 
+const getStats = async (id: string): Promise<ExplotacionStatsDTO> => {
+  return HttpService.get(`${BASE}/${id}/stats`) as Promise<ExplotacionStatsDTO>;
+};
+
 export const ExplotacionRepository = {
   getAll,
   getById,
   create,
   update,
   remove,
+  getStats,
 };

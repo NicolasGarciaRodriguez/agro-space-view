@@ -64,6 +64,7 @@
       color: oklch(0.97 0 0);
       line-height: 1.1;
       letter-spacing: -0.03em;
+      text-shadow: 0 2px 20px oklch(0 0 0 / 0.8);
     }
 
     &__body {
@@ -71,6 +72,7 @@
       color: oklch(0.62 0 0);
       line-height: 1.7;
       max-width: 440px;
+      text-shadow: 0 1px 8px oklch(0 0 0 / 0.6);
     }
   }
 }

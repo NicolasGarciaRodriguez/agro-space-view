@@ -10,8 +10,11 @@ import { ParcelaRepository } from "@agrospace/shared/repositories/Parcela.reposi
 import { DashboardStats } from "./components/dashboardStats/DashboardStats.component";
 import { DashboardInsights } from "./components/dashboardInsights/DashboardInsights.component";
 import { DashboardEmpty } from "./components/dashboardEmpty/DashboardEmpty.component";
+import { Alerta } from "@/components/alerta/Alerta.component";
 import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
+import type { ExplotacionStatsDTO } from "@agrospace/shared/dtos/Explotacion.dto";
 import styles from "./DashboardMain.module.scss";
+
 const DashboardMap = dynamic(
   () =>
     import("./components/dashboardMap/DashboardMap.component").then(
@@ -19,6 +22,8 @@ const DashboardMap = dynamic(
     ),
   { ssr: false },
 );
+
+const NDVI_ALERT_THRESHOLD = 0.3;
 
 export const DashboardMain = () => {
   const router = useRouter();
@@ -32,6 +37,8 @@ export const DashboardMain = () => {
 
   const [parcelas, setParcelas] = useState<ParcelaDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<ExplotacionStatsDTO | null>(null);
+  const [alertaDismissed, setAlertaDismissed] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -58,17 +65,24 @@ export const DashboardMain = () => {
 
   useEffect(() => {
     if (!activeExplotacion) return;
+    setAlertaDismissed(false);
 
-    const loadParcelas = async () => {
+    const loadData = async () => {
       try {
-        const data = await ParcelaRepository.getAll(activeExplotacion._id);
-        setParcelas(data);
+        const [parcelasData, statsData] = await Promise.all([
+          ParcelaRepository.getAll(activeExplotacion._id),
+          ExplotacionRepository.getStats(activeExplotacion._id),
+        ]);
+        setParcelas(parcelasData);
+        setStats(statsData);
+        console.log("stats:", statsData); // ← añade esto
+        console.log("parcelas:", parcelasData); // ← y esto
       } catch {
         setParcelas([]);
       }
     };
 
-    loadParcelas();
+    loadData();
   }, [activeExplotacion?._id]);
 
   if (isLoading) {
@@ -85,12 +99,44 @@ export const DashboardMain = () => {
 
   const superficieTotal = parcelas.reduce((acc, p) => acc + p.superficie, 0);
 
+  // Determina si hay alerta de NDVI
+  const hayAlerta =
+    !alertaDismissed &&
+    stats?.parcelaPeor != null &&
+    stats.parcelaPeor.ndvi < NDVI_ALERT_THRESHOLD;
+
+  const parcelaPeor = hayAlerta
+    ? parcelas.find((p) => p.nombre === stats!.parcelaPeor!.nombre)
+    : null;
+
+  const ndvi = stats?.parcelaPeor?.ndvi ?? 0;
+  const alertaSeverity =
+    ndvi < 0.1 ? "Crítico" : ndvi < 0.2 ? "Muy bajo" : "Bajo";
+  const alertaType = ndvi < 0.1 ? "error" : "warning";
+
   return (
     <div className={styles.dashboard}>
       <main className={styles.dashboard__main}>
+        {/* Alerta NDVI */}
+        {hayAlerta && (
+          <Alerta
+            type={alertaType}
+            title={`Alerta de vegetación — ${alertaSeverity}`}
+            body={`${stats!.parcelaPeor!.nombre} tiene un NDVI de ${ndvi.toFixed(3)} — por debajo del umbral mínimo de ${NDVI_ALERT_THRESHOLD}. Puede indicar estrés hídrico o enfermedad.`}
+            ctaLabel="Ver parcela →"
+            onCta={
+              parcelaPeor
+                ? () => router.push(`/dashboard/parcelas/${parcelaPeor._id}`)
+                : undefined
+            }
+            onClose={() => setAlertaDismissed(true)}
+          />
+        )}
+
         <DashboardStats
           totalParcelas={parcelas.length}
           superficieTotal={superficieTotal}
+          stats={stats}
         />
 
         {parcelas.length > 0 && <DashboardMap parcelas={parcelas} />}

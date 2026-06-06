@@ -2,7 +2,7 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 
   @media (max-width: $tablet) {
@@ -12,6 +12,7 @@
   @media (max-width: $mobile) {
     grid-template-columns: 1fr;
   }
+
   &__card {
     display: flex;
     align-items: flex-start;

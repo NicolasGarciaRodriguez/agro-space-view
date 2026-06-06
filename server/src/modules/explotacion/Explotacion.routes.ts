@@ -8,6 +8,7 @@ import {
   type UpdateExplotacionRequest,
   type GetExplotacionRequest,
   type DeleteExplotacionRequest,
+  GetExplotacionStatsRequest,
 } from "./Explotacion.interface.js";
 import { authenticate } from "../../middleware/Auth.middleware.js";
 
@@ -71,6 +72,23 @@ export default function ExplotacionRoutes(
     async (request: DeleteExplotacionRequest, reply: FastifyReply) => {
       try {
         return await ExplotacionController.remove(request, reply);
+      } catch (error) {
+        if (error instanceof ExplotacionNotFoundError) {
+          return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof ExplotacionForbiddenError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
+      }
+    },
+  );
+
+  fastify.get(
+    `${EXPLOTACION_ROUTE_PREFIX}/:id/stats`,
+    async (request: GetExplotacionStatsRequest, reply: FastifyReply) => {
+      try {
+        return await ExplotacionController.getStats(request, reply);
       } catch (error) {
         if (error instanceof ExplotacionNotFoundError) {
           return reply.status(404).send({ error: error.message });
