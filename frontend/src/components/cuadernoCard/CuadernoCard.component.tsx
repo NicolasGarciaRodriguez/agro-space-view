@@ -1,8 +1,8 @@
 "use client";
 
 import { TIPO_CONFIG } from "@/components/addEntradaCuadernoModal/AddEntradaCuadernoModal.interface";
-import type { CuadernoEntradaCardProps } from "./CuadernoEntradaCard.interface";
-import styles from "./CuadernoEntradaCard.module.scss";
+import type { CuadernoCardProps } from "./CuadernoCard.interface";
+import styles from "./CuadernoCard.module.scss";
 
 const formatFecha = (fecha: string): string =>
   new Date(fecha).toLocaleDateString("es-ES", {
@@ -11,25 +11,33 @@ const formatFecha = (fecha: string): string =>
     year: "numeric",
   });
 
-export const CuadernoEntradaCard = ({
+export const CuadernoCard = ({
   entrada,
-  parcela,
   confirmDeleteId,
   onEdit,
   onDeleteClick,
+  variant = "default",
+  parcela,
   onParcelaClick,
-}: CuadernoEntradaCardProps) => {
+}: CuadernoCardProps) => {
   const config = TIPO_CONFIG[entrada.tipo];
   const isConfirmingDelete = confirmDeleteId === entrada._id;
 
   return (
-    <div className={styles.card}>
+    <div
+      className={[
+        styles.card,
+        variant === "nested" ? styles["card--nested"] : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className={styles.card__left}>
         <span className={styles.card__icon}>{config.icon}</span>
-        <div className={styles.card__info}>
+        <div className={styles.card__content}>
           <div className={styles.card__tipo}>{config.label}</div>
           <div className={styles.card__fecha}>{formatFecha(entrada.fecha)}</div>
-          {parcela && (
+          {parcela && onParcelaClick && (
             <button
               className={styles.card__parcela}
               onClick={onParcelaClick}

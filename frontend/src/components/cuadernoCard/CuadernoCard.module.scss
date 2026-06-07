@@ -1,6 +1,10 @@
+@import "@/styles/settings/_screen-types";
+
 .card {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "left datos actions";
+  align-items: start;
   gap: 12px;
   padding: 1rem 1.25rem;
   background: oklch(0.14 0.01 220 / 0.8);
@@ -8,16 +12,43 @@
   border-radius: var(--radius-md);
   transition: border-color 0.15s;
 
+  @media (max-width: $tablet) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left actions"
+      "datos datos";
+    gap: 10px;
+  }
+
+  @media (max-width: $mobile) {
+    padding: 0.875rem 1rem;
+    gap: 8px;
+  }
+
   &:hover {
     border-color: oklch(1 0 0 / 0.13);
+  }
+
+  &--nested {
+    padding: 1rem;
+    background: oklch(0.17 0.01 220 / 0.6);
+    border-color: oklch(1 0 0 / 0.06);
+
+    &:hover {
+      border-color: oklch(1 0 0 / 0.12);
+    }
+
+    @media (max-width: $mobile) {
+      padding: 0.875rem;
+    }
   }
 
   &__left {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    flex: 1;
     min-width: 0;
+    grid-area: left;
   }
 
   &__icon {
@@ -26,7 +57,7 @@
     margin-top: 2px;
   }
 
-  &__info {
+  &__content {
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -67,6 +98,7 @@
     color: oklch(0.6 0 0);
     font-style: italic;
     margin-top: 2px;
+    word-break: break-word;
   }
 
   &__datos {
@@ -74,6 +106,12 @@
     flex-wrap: wrap;
     gap: 6px;
     align-items: center;
+    min-width: 0;
+    grid-area: datos;
+
+    @media (max-width: $tablet) {
+      padding-top: 2px;
+    }
   }
 
   &__dato {
@@ -93,6 +131,7 @@
     display: flex;
     gap: 6px;
     flex-shrink: 0;
+    grid-area: actions;
   }
 
   &__edit {
@@ -128,6 +167,7 @@
     border-radius: var(--radius-md);
     color: oklch(0.45 0 0);
     cursor: pointer;
+    flex-shrink: 0;
     transition: all 0.15s;
 
     &:hover {

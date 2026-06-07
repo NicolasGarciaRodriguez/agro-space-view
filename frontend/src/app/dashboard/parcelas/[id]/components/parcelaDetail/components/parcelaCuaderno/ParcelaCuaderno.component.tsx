@@ -4,18 +4,11 @@ import { useEffect, useState } from "react";
 import { CuadernoEntradaRepository } from "@agrospace/shared/repositories/CuadernoEntrada.repository";
 import { AddEntradaCuadernoModal } from "@/components/addEntradaCuadernoModal/AddEntradaCuadernoModal.component";
 import { Button } from "@/components/button/Button.component";
+import { CuadernoCard } from "@/components/cuadernoCard/CuadernoCard.component";
 import { isHttpError } from "@/lib/http-error";
 import type { CuadernoEntradaDTO } from "@agrospace/shared/dtos/CuadernoEntrada.dto";
 import type { ParcelaCuadernoProps } from "./ParcelaCuaderno.interface";
-import { TIPO_CONFIG } from "@/components/addEntradaCuadernoModal/AddEntradaCuadernoModal.interface";
 import styles from "./ParcelaCuaderno.module.scss";
-
-const formatFecha = (fecha: string): string =>
-  new Date(fecha).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 
 export const ParcelaCuaderno = ({
   parcelaId,
@@ -115,63 +108,16 @@ export const ParcelaCuaderno = ({
         </div>
       ) : (
         <div className={styles.cuaderno__list}>
-          {entradas.map((entrada) => {
-            const config = TIPO_CONFIG[entrada.tipo];
-            return (
-              <div key={entrada._id} className={styles.entrada}>
-                <div className={styles.entrada__left}>
-                  <span className={styles.entrada__icon}>{config.icon}</span>
-                  <div className={styles.entrada__content}>
-                    <div className={styles.entrada__tipo}>{config.label}</div>
-                    <div className={styles.entrada__fecha}>
-                      {formatFecha(entrada.fecha)}
-                    </div>
-                    {entrada.notas && (
-                      <div className={styles.entrada__notas}>
-                        {entrada.notas}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className={styles.entrada__datos}>
-                  {Object.entries(entrada.datos)
-                    .filter(([, v]) => v !== undefined && v !== "")
-                    .map(([k, v]) => (
-                      <span key={k} className={styles.entrada__dato}>
-                        {k}: <strong>{String(v)}</strong>
-                      </span>
-                    ))}
-                </div>
-                <div className={styles.entrada__actions}>
-                  <button
-                    className={styles.entrada__edit}
-                    onClick={() => setEntradaToEdit(entrada)}
-                    title="Editar entrada"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    className={[
-                      styles.entrada__delete,
-                      confirmDeleteId === entrada._id
-                        ? styles["entrada__delete--confirm"]
-                        : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={() => handleDeleteClick(entrada._id)}
-                    title={
-                      confirmDeleteId === entrada._id
-                        ? "Confirmar eliminación"
-                        : "Eliminar entrada"
-                    }
-                  >
-                    {confirmDeleteId === entrada._id ? "⚠ Confirmar" : "✕"}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {entradas.map((entrada) => (
+            <CuadernoCard
+              key={entrada._id}
+              entrada={entrada}
+              variant="nested"
+              confirmDeleteId={confirmDeleteId}
+              onEdit={() => setEntradaToEdit(entrada)}
+              onDeleteClick={() => handleDeleteClick(entrada._id)}
+            />
+          ))}
         </div>
       )}
 

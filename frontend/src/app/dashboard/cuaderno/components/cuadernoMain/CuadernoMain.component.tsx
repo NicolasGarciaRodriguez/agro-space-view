@@ -7,7 +7,7 @@ import { CuadernoEntradaRepository } from "@agrospace/shared/repositories/Cuader
 import { ParcelaRepository } from "@agrospace/shared/repositories/Parcela.repository";
 import { AddEntradaCuadernoModal } from "@/components/addEntradaCuadernoModal/AddEntradaCuadernoModal.component";
 import { CuadernoFiltros } from "./components/cuadernoFiltros/CuadernoFiltros.component";
-import { CuadernoEntradaCard } from "./components/cuadernoEntradaCard/CuadernoEntradaCard.component";
+import { CuadernoCard } from "@/components/cuadernoCard/CuadernoCard.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
 import type {
@@ -169,7 +169,7 @@ export const CuadernoMain = () => {
         <>
           <div className={styles.cuaderno__list}>
             {entradas.map((entrada) => (
-              <CuadernoEntradaCard
+              <CuadernoCard
                 key={entrada._id}
                 entrada={entrada}
                 parcela={parcelaMap[entrada.parcelaId]}
