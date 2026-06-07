@@ -36,11 +36,6 @@ const calcBbox = (coords: LonLat[]): [number, number, number, number] => {
   ];
 };
 
-const calcCenter = (coords: LonLat[]): LonLat => {
-  const bbox = calcBbox(coords);
-  return [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
-};
-
 const getRefFromCoords = async (
   query: GetParcelByCoordsQuery,
 ): Promise<string> => {
