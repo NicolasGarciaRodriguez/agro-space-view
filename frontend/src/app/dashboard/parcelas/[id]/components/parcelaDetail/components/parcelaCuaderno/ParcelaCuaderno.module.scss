@@ -1,3 +1,5 @@
+@import "@/styles/settings/_screen-types";
+
 .cuaderno {
   background: oklch(0.14 0.01 220 / 0.8);
   border: 1px solid oklch(1 0 0 / 0.07);
@@ -7,10 +9,28 @@
   flex-direction: column;
   gap: 1.25rem;
 
+  @media (max-width: $mobile) {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    @media (max-width: $mobile) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    > button {
+      @media (max-width: $mobile) {
+        width: 100%;
+      }
+    }
   }
 
   &__title {
@@ -51,6 +71,10 @@
     padding: 2rem 0;
     text-align: center;
 
+    @media (max-width: $mobile) {
+      padding: 1.5rem 0;
+    }
+
     &__icon {
       font-size: 2.5rem;
     }
@@ -60,6 +84,12 @@
       color: oklch(0.52 0 0);
       line-height: 1.7;
       max-width: 400px;
+    }
+
+    > button {
+      @media (max-width: $mobile) {
+        width: 100%;
+      }
     }
   }
 
@@ -71,14 +101,29 @@
 }
 
 .entrada {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "left datos actions";
+  align-items: start;
   gap: 12px;
   padding: 1rem;
   background: oklch(0.17 0.01 220 / 0.6);
   border: 1px solid oklch(1 0 0 / 0.06);
   border-radius: var(--radius-md);
   transition: border-color 0.15s;
+
+  @media (max-width: $tablet) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left actions"
+      "datos datos";
+    gap: 10px;
+  }
+
+  @media (max-width: $mobile) {
+    padding: 0.875rem;
+    gap: 8px;
+  }
 
   &:hover {
     border-color: oklch(1 0 0 / 0.12);
@@ -88,6 +133,7 @@
     display: flex;
     gap: 6px;
     flex-shrink: 0;
+    grid-area: actions;
   }
 
   &__edit {
@@ -115,14 +161,18 @@
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    flex: 1;
     min-width: 0;
+    grid-area: left;
   }
 
   &__icon {
     font-size: 1.25rem;
     flex-shrink: 0;
     margin-top: 2px;
+  }
+
+  &__content {
+    min-width: 0;
   }
 
   &__tipo {
@@ -142,6 +192,7 @@
     color: oklch(0.6 0 0);
     margin-top: 4px;
     font-style: italic;
+    word-break: break-word;
   }
 
   &__datos {
@@ -149,6 +200,12 @@
     flex-wrap: wrap;
     gap: 6px;
     align-items: center;
+    min-width: 0;
+    grid-area: datos;
+
+    @media (max-width: $tablet) {
+      padding-top: 2px;
+    }
   }
 
   &__dato {

@@ -121,7 +121,7 @@ export const ParcelaCuaderno = ({
               <div key={entrada._id} className={styles.entrada}>
                 <div className={styles.entrada__left}>
                   <span className={styles.entrada__icon}>{config.icon}</span>
-                  <div>
+                  <div className={styles.entrada__content}>
                     <div className={styles.entrada__tipo}>{config.label}</div>
                     <div className={styles.entrada__fecha}>
                       {formatFecha(entrada.fecha)}
