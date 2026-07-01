@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "user";
+import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 
 export interface AuthUser {
   id: string;

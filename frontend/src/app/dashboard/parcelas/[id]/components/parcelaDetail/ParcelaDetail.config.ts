@@ -1,4 +1,4 @@
-export type ParcelaTab = "ndvi" | "analisis" | "cuaderno";
+export type ParcelaTab = "mapa" | "analisis" | "cuaderno";
 
 export interface TabConfig {
   id: ParcelaTab;
@@ -7,9 +7,9 @@ export interface TabConfig {
 }
 
 export const PARCELA_TABS: TabConfig[] = [
-  { id: "ndvi", label: "Análisis NDVI", icon: "🛰" },
+  { id: "mapa", label: "Mapa satelital", icon: "🛰" },
   { id: "analisis", label: "Historial", icon: "📊" },
   { id: "cuaderno", label: "Cuaderno de campo", icon: "📓" },
 ];
 
-export const DEFAULT_TAB: ParcelaTab = "ndvi";
+export const DEFAULT_TAB: ParcelaTab = "mapa";

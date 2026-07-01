@@ -7,7 +7,6 @@ import { useExplotacionStore } from "@/stores/explotacion/Explotacion.store";
 import { isHttpError } from "@/lib/http-error";
 import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
 import { ParcelaInfo } from "./components/parcelaInfo/ParcelaInfo.component";
-import { ParcelaNdvi } from "./components/parcelaNdvi/ParcelaNdvi.component";
 import { ParcelaCuaderno } from "./components/parcelaCuaderno/ParcelaCuaderno.component";
 import { ParcelaAnalisis } from "./components/parcelaAnalisis/ParcelaAnalisis.component";
 import {
@@ -17,6 +16,7 @@ import {
 } from "./ParcelaDetail.config";
 import type { ParcelaDetailProps } from "./ParcelaDetail.interface";
 import styles from "./ParcelaDetail.module.scss";
+import { ParcelaAnalisisMapa } from "./components/parcelaAnalisisMapa/ParcelaAnalisisMapa.component";
 
 export const ParcelaDetail = ({ id }: ParcelaDetailProps) => {
   const router = useRouter();
@@ -103,7 +103,7 @@ export const ParcelaDetail = ({ id }: ParcelaDetailProps) => {
 
       {/* Contenido de la tab activa */}
       <div className={styles.detail__content}>
-        {activeTab === "ndvi" && <ParcelaNdvi parcela={parcela} />}
+        {activeTab === "mapa" && <ParcelaAnalisisMapa parcela={parcela} />}
         {activeTab === "analisis" && (
           <ParcelaAnalisis parcelaId={parcela._id} />
         )}

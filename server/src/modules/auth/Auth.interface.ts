@@ -1,6 +1,5 @@
 import type { FastifyRequest } from "fastify";
-import { UserRole } from "../../schemas/User.schema.js";
-
+import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 
 export interface LogInBody {
   email: string;
@@ -15,17 +14,14 @@ export interface RegistrationBody {
   telefono?: string;
 }
 
-
 export type LogInRequest = FastifyRequest<{ Body: LogInBody }>;
 export type RegistrationRequest = FastifyRequest<{ Body: RegistrationBody }>;
-
 
 export interface JWTPayload {
   userId: string;
   email: string;
   role: UserRole;
 }
-
 
 export interface AuthResponse {
   token: string;
@@ -37,7 +33,6 @@ export interface AuthResponse {
     role: UserRole;
   };
 }
-
 
 export class EmailAlreadyExistsError extends Error {
   constructor() {

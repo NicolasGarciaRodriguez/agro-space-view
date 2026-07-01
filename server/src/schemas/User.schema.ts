@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-
-export type UserRole = "admin" | "user";
+import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 
 export interface IUser {
   email: string;
@@ -44,8 +43,8 @@ const UserSchema = new Schema<IUserDocument>(
     },
     role: {
       type: String,
-      enum: ["admin", "user"],
-      default: "user",
+      enum: Object.values(UserRole),
+      default: UserRole.AGRICULTOR,
     },
   },
   { timestamps: true, versionKey: false },

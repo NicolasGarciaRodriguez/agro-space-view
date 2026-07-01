@@ -1,3 +1,4 @@
+// AnalisisChart.component.tsx
 "use client";
 
 import {
@@ -9,10 +10,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { NdviTimeSeriesPointDTO } from "@agrospace/shared/dtos/Ndvi.dto";
+import type {
+  TimeSeriesPointDTO,
+  IndiceDefinitionDTO,
+} from "@agrospace/shared/dtos/Analisis.dto";
 
-interface NdviChartProps {
-  points: NdviTimeSeriesPointDTO[];
+interface AnalisisChartProps {
+  points: TimeSeriesPointDTO[];
+  indice: IndiceDefinitionDTO;
 }
 
 const formatDate = (date: string): string => {
@@ -20,16 +25,14 @@ const formatDate = (date: string): string => {
   return d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
 };
 
-const formatNdvi = (value: number): string => value.toFixed(3);
+const formatValue = (value: number): string => value.toFixed(3);
 
-const getNdviColor = (mean: number): string => {
-  if (mean >= 0.6) return "#16a34a";
-  if (mean >= 0.4) return "#84cc16";
-  if (mean >= 0.2) return "#eab308";
-  return "#ef4444";
-};
+// Busca en los ranges del índice el color y label correspondientes a un valor
+const getRangeFor = (value: number, indice: IndiceDefinitionDTO) =>
+  indice.ranges.find((r) => value >= r.min && value < r.max) ??
+  indice.ranges[indice.ranges.length - 1];
 
-export const NdviChart = ({ points }: NdviChartProps) => {
+export const AnalisisChart = ({ points, indice }: AnalisisChartProps) => {
   if (points.length === 0) {
     return (
       <div className="flex h-48 items-center justify-center rounded-xl border border-neutral-200 bg-neutral-50 text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-950">
@@ -38,8 +41,8 @@ export const NdviChart = ({ points }: NdviChartProps) => {
     );
   }
 
-  const meanNdvi = points.reduce((a, b) => a + b.mean, 0) / points.length;
-  const color = getNdviColor(meanNdvi);
+  const meanValue = points.reduce((a, b) => a + b.mean, 0) / points.length;
+  const color = getRangeFor(meanValue, indice).color;
 
   const data = points.map((p) => ({
     date: formatDate(p.date),
@@ -51,7 +54,7 @@ export const NdviChart = ({ points }: NdviChartProps) => {
   return (
     <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
       <h3 className="mb-4 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-        Evolución NDVI
+        Evolución {indice.label}
       </h3>
       <ResponsiveContainer width="100%" height={240}>
         <AreaChart
@@ -59,7 +62,7 @@ export const NdviChart = ({ points }: NdviChartProps) => {
           margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
         >
           <defs>
-            <linearGradient id="ndviGradient" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="analisisGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={color} stopOpacity={0.3} />
               <stop offset="95%" stopColor={color} stopOpacity={0.05} />
             </linearGradient>
@@ -72,17 +75,17 @@ export const NdviChart = ({ points }: NdviChartProps) => {
             axisLine={false}
           />
           <YAxis
-            domain={[0, 1]}
+            domain={[-1, 1]}
             tick={{ fontSize: 11 }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={formatNdvi}
+            tickFormatter={formatValue}
             width={40}
           />
           <Tooltip
             formatter={(value) => [
-              typeof value === "number" ? formatNdvi(value) : "—",
-              "NDVI medio",
+              typeof value === "number" ? formatValue(value) : "—",
+              `${indice.label} medio`,
             ]}
             labelStyle={{ fontSize: 12 }}
             contentStyle={{
@@ -96,7 +99,7 @@ export const NdviChart = ({ points }: NdviChartProps) => {
             dataKey="mean"
             stroke={color}
             strokeWidth={2}
-            fill="url(#ndviGradient)"
+            fill="url(#analisisGradient)"
             dot={{ r: 4, fill: color, strokeWidth: 0 }}
             activeDot={{ r: 6 }}
           />
@@ -104,21 +107,19 @@ export const NdviChart = ({ points }: NdviChartProps) => {
       </ResponsiveContainer>
       <div className="mt-3 flex items-center justify-between text-xs text-neutral-500">
         <span>
-          NDVI medio del período: <strong>{formatNdvi(meanNdvi)}</strong>
+          {indice.label} medio del período:{" "}
+          <strong>{formatValue(meanValue)}</strong>
         </span>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-green-600" />
-            Sana ≥0.6
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-yellow-500" />
-            Escasa ≥0.2
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-red-500" />
-            Estrés &lt;0.2
-          </span>
+        <div className="flex flex-wrap items-center gap-3">
+          {indice.ranges.map((r) => (
+            <span key={r.label} className="flex items-center gap-1">
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: r.color }}
+              />
+              {r.label}
+            </span>
+          ))}
         </div>
       </div>
     </div>

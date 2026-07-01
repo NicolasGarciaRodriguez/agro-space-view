@@ -1,4 +1,4 @@
-import type { UserRole } from "../types/auth.types";
+import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 
 export interface LoginDTO {
   email: string;

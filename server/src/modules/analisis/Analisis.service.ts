@@ -4,19 +4,19 @@ import { StacService } from "../stac/Stac.service.js";
 import {
   SENTINEL_HUB_PROCESS_URL,
   SENTINEL_HUB_STATISTICS_URL,
-  NDVI_OUTPUT,
-  NDVI_EVALSCRIPT,
-  NDVI_STATISTICS_EVALSCRIPT,
-} from "./Ndvi.config.js";
+  ANALISIS_OUTPUT,
+  getIndiceDefinition,
+  type IndiceDefinition,
+} from "./Analisis.config.js";
 import type {
-  AnalyseNdviBody,
+  AnalyseBody,
   SentinelHubProcessBody,
-  NdviAnalysisMetadata,
-  GetNdviTimeSeriesQuery,
+  AnalysisMetadata,
+  GetTimeSeriesQuery,
   SHStatisticsResponse,
-  NdviTimeSeriesPoint,
-  NdviTimeSeriesResponse,
-} from "./Ndvi.interface.js";
+  TimeSeriesPoint,
+  TimeSeriesResponse,
+} from "./Analisis.interface.ts";
 
 const round = (n: number): number => Math.round(n * 1000) / 1000;
 
@@ -38,6 +38,7 @@ const buildProcessBody = (
   bbox: number[],
   date: string,
   maxCloud: number,
+  definition: IndiceDefinition,
 ): SentinelHubProcessBody => ({
   input: {
     bounds: {
@@ -58,19 +59,21 @@ const buildProcessBody = (
     ],
   },
   output: {
-    width: NDVI_OUTPUT.width,
-    height: NDVI_OUTPUT.height,
+    width: ANALISIS_OUTPUT.width,
+    height: ANALISIS_OUTPUT.height,
     responses: [
-      { identifier: "default", format: { type: NDVI_OUTPUT.format } },
+      { identifier: "default", format: { type: ANALISIS_OUTPUT.format } },
     ],
   },
-  evalscript: NDVI_EVALSCRIPT,
+  evalscript: definition.imageEvalscript,
 });
 
 const analyse = async (
-  params: AnalyseNdviBody,
-): Promise<{ image: Buffer; metadata: NdviAnalysisMetadata }> => {
-  const { bbox, dateFrom, dateTo, maxCloud = 20 } = params;
+  params: AnalyseBody,
+): Promise<{ image: Buffer; metadata: AnalysisMetadata }> => {
+  const { tipo, bbox, dateFrom, dateTo, maxCloud = 20 } = params;
+
+  const definition = getIndiceDefinition(tipo);
 
   const { items } = await StacService.searchImages({
     bbox: bbox.join(","),
@@ -88,7 +91,12 @@ const analyse = async (
   const best = pickBestImage(items);
   const bestDate = best.date.split("T")[0];
   const token = await CopernicusAuthService.getToken();
-  const body = buildProcessBody(bbox as number[], bestDate, maxCloud);
+  const body = buildProcessBody(
+    bbox as number[],
+    bestDate,
+    maxCloud,
+    definition,
+  );
 
   const res = await fetch(SENTINEL_HUB_PROCESS_URL, {
     method: "POST",
@@ -105,7 +113,8 @@ const analyse = async (
   }
 
   const buffer = Buffer.from(await res.arrayBuffer());
-  const metadata: NdviAnalysisMetadata = {
+  const metadata: AnalysisMetadata = {
+    tipo,
     usedImageId: best.id,
     usedImageDate: best.date,
     cloudCover: best.cloudCover,
@@ -116,10 +125,11 @@ const analyse = async (
 };
 
 const getTimeSeries = async (
-  query: GetNdviTimeSeriesQuery,
-): Promise<NdviTimeSeriesResponse> => {
-  const { bbox: bboxStr, dateFrom, dateTo, maxCloud = 20 } = query;
+  query: GetTimeSeriesQuery,
+): Promise<TimeSeriesResponse> => {
+  const { tipo, bbox: bboxStr, dateFrom, dateTo, maxCloud = 20 } = query;
   const bbox = parseBbox(bboxStr);
+  const definition = getIndiceDefinition(tipo);
   const token = await CopernicusAuthService.getToken();
 
   const body = {
@@ -149,7 +159,7 @@ const getTimeSeries = async (
       aggregationInterval: { of: "P1M" },
       width: 512,
       height: 512,
-      evalscript: NDVI_STATISTICS_EVALSCRIPT,
+      evalscript: definition.statisticsEvalscript,
     },
   };
 
@@ -169,14 +179,14 @@ const getTimeSeries = async (
 
   const data = (await res.json()) as SHStatisticsResponse;
 
-  const points: NdviTimeSeriesPoint[] = data.data.map((item) => ({
+  const points: TimeSeriesPoint[] = data.data.map((item) => ({
     date: item.interval.from.split("T")[0],
-    mean: round(item.outputs.ndvi.bands.B0.stats.mean),
-    min: round(item.outputs.ndvi.bands.B0.stats.min),
-    max: round(item.outputs.ndvi.bands.B0.stats.max),
+    mean: round(item.outputs.index.bands.B0.stats.mean),
+    min: round(item.outputs.index.bands.B0.stats.min),
+    max: round(item.outputs.index.bands.B0.stats.max),
   }));
 
-  return { points, bbox, dateFrom, dateTo };
+  return { points, tipo, bbox, dateFrom, dateTo };
 };
 
 export class NoImagesFoundError extends Error {
@@ -186,4 +196,4 @@ export class NoImagesFoundError extends Error {
   }
 }
 
-export const NdviService = { analyse, getTimeSeries };
+export const AnalisisService = { analyse, getTimeSeries };

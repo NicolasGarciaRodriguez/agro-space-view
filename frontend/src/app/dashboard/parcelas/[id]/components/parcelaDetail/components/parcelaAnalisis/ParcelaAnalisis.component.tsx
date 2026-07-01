@@ -2,9 +2,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnalisisNdviRepository } from "@agrospace/shared/repositories/AnalisisNdvi.repository";
+import { AnalisisRepository } from "@agrospace/shared/repositories/Analisis.repository";
 import { isHttpError } from "@/lib/http-error";
-import type { AnalisisNdviDTO } from "@agrospace/shared/dtos/AnalisisNdvi.dto";
+import type {
+  AnalisisDTO,
+  IndiceDefinitionDTO,
+} from "@agrospace/shared/dtos/Analisis.dto";
+import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import type { ParcelaAnalisisProps } from "./ParcelaAnalisis.interface";
 import styles from "./ParcelaAnalisis.module.scss";
 
@@ -28,29 +32,39 @@ const formatPeriod = (from: string, to: string): string => {
   return `${f} — ${t}`;
 };
 
-const getNdviColor = (ndvi: number): string => {
-  if (ndvi >= 0.6) return "var(--ndvi-good)";
-  if (ndvi >= 0.3) return "var(--ndvi-moderate)";
-  return "var(--ndvi-bad)";
-};
-
-const getNdviLabel = (ndvi: number): string => {
-  if (ndvi >= 0.6) return "Sana";
-  if (ndvi >= 0.3) return "Moderada";
-  return "Estrés";
+// Busca el rango correspondiente en la definición del índice
+const getRangeFor = (value: number, indice?: IndiceDefinitionDTO) => {
+  if (!indice) return { label: "—", color: "#999" };
+  return (
+    indice.ranges.find((r) => value >= r.min && value < r.max) ??
+    indice.ranges[indice.ranges.length - 1]
+  );
 };
 
 export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
-  const [analisis, setAnalisis] = useState<AnalisisNdviDTO[]>([]);
+  const [indices, setIndices] = useState<IndiceDefinitionDTO[]>([]);
+  const [tipoActivo, setTipoActivo] = useState<IndiceTipo>(IndiceTipo.NDVI);
+  const [analisis, setAnalisis] = useState<AnalisisDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Carga la lista de índices disponibles una sola vez
+  useEffect(() => {
+    AnalisisRepository.getIndices()
+      .then(setIndices)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await AnalisisNdviRepository.getByParcela(parcelaId, 20);
+        const data = await AnalisisRepository.getByParcela(
+          parcelaId,
+          tipoActivo,
+          20,
+        );
         setAnalisis(data);
       } catch (err) {
         setError(
@@ -64,11 +78,36 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
     };
 
     load();
-  }, [parcelaId]);
+  }, [parcelaId, tipoActivo]);
+
+  const indiceActivo = indices.find((i) => i.tipo === tipoActivo);
 
   return (
     <section className={styles.analisis}>
-      <h2 className={styles.analisis__title}>Historial de análisis</h2>
+      <div className={styles.analisis__header}>
+        <h2 className={styles.analisis__title}>Historial de análisis</h2>
+
+        {indices.length > 0 && (
+          <div className={styles.analisis__tipoSelector}>
+            {indices.map((indice) => (
+              <button
+                key={indice.tipo}
+                className={[
+                  styles.analisis__tipoBtn,
+                  tipoActivo === indice.tipo
+                    ? styles["analisis__tipoBtn--active"]
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => setTipoActivo(indice.tipo)}
+              >
+                {indice.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {error && (
         <p className={styles.analisis__error} role="alert">
@@ -83,7 +122,10 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
       ) : analisis.length === 0 ? (
         <div className={styles.analisis__empty}>
           <span>📊</span>
-          <p>No hay análisis guardados aún. Realiza tu primer análisis NDVI.</p>
+          <p>
+            No hay análisis de {indiceActivo?.label ?? tipoActivo} guardados
+            aún.
+          </p>
         </div>
       ) : (
         <div className={styles.analisis__tableWrapper}>
@@ -91,7 +133,9 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
             <thead>
               <tr>
                 <th className={styles.table__th}>Período</th>
-                <th className={styles.table__th}>NDVI medio</th>
+                <th className={styles.table__th}>
+                  {indiceActivo?.label ?? "Índice"} medio
+                </th>
                 <th className={styles.table__th}>Estado</th>
                 <th className={styles.table__th}>Nubosidad</th>
                 <th className={styles.table__th}>Temp. máx.</th>
@@ -101,9 +145,9 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
             </thead>
             <tbody>
               {analisis.map((a, i) => {
-                const color = getNdviColor(a.ndviMedio);
+                const range = getRangeFor(a.indiceMedio, indiceActivo);
                 const prev = analisis[i + 1];
-                const diff = prev ? a.ndviMedio - prev.ndviMedio : null;
+                const diff = prev ? a.indiceMedio - prev.indiceMedio : null;
 
                 return (
                   <tr key={a._id} className={styles.table__tr}>
@@ -111,21 +155,21 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
                       {formatPeriod(a.dateFrom, a.dateTo)}
                     </td>
                     <td className={styles.table__td}>
-                      <div className={styles.ndvi}>
+                      <div className={styles.indice}>
                         <span
-                          className={styles.ndvi__dot}
-                          style={{ background: color }}
+                          className={styles.indice__dot}
+                          style={{ background: range.color }}
                         />
-                        <span className={styles.ndvi__value}>
-                          {a.ndviMedio.toFixed(3)}
+                        <span className={styles.indice__value}>
+                          {a.indiceMedio.toFixed(3)}
                         </span>
                         {diff !== null && (
                           <span
                             className={[
-                              styles.ndvi__diff,
+                              styles.indice__diff,
                               diff >= 0
-                                ? styles["ndvi__diff--up"]
-                                : styles["ndvi__diff--down"],
+                                ? styles["indice__diff--up"]
+                                : styles["indice__diff--down"],
                             ].join(" ")}
                           >
                             {diff >= 0 ? "▲" : "▼"} {Math.abs(diff).toFixed(3)}
@@ -136,9 +180,9 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
                     <td className={styles.table__td}>
                       <span
                         className={styles.badge}
-                        style={{ color, borderColor: color }}
+                        style={{ color: range.color, borderColor: range.color }}
                       >
-                        {getNdviLabel(a.ndviMedio)}
+                        {range.label}
                       </span>
                     </td>
                     <td className={styles.table__td}>

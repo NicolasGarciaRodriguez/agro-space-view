@@ -34,16 +34,17 @@ const uploadBuffer = async (
   return { url, key };
 };
 
-const generateNdviKey = (
+const generateKey = (
+  tipo: string,
   parcelaId: string,
   dateFrom: string,
   dateTo: string,
 ): string => {
   const timestamp = Date.now();
-  return `ndvi/${parcelaId}/${dateFrom}_${dateTo}_${timestamp}.png`;
+  return `${tipo}/${parcelaId}/${dateFrom}_${dateTo}_${timestamp}.png`;
 };
 
 export const S3Service = {
   uploadBuffer,
-  generateNdviKey,
+  generateKey,
 };

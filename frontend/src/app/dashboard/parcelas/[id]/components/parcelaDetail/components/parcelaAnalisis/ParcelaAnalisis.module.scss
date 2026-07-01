@@ -1,9 +1,4 @@
 // ParcelaAnalisis.module.scss
-:root {
-  --ndvi-good: oklch(0.65 0.15 150);
-  --ndvi-moderate: oklch(0.75 0.15 90);
-  --ndvi-bad: oklch(0.65 0.18 25);
-}
 
 .analisis {
   background: oklch(0.14 0.01 220 / 0.8);
@@ -14,10 +9,49 @@
   flex-direction: column;
   gap: 1.25rem;
 
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
   &__title {
     font-size: 1.125rem;
     font-weight: 600;
     color: oklch(0.88 0 0);
+  }
+
+  &__tipoSelector {
+    display: flex;
+    gap: 4px;
+    background: oklch(0.12 0.01 220);
+    border: 1px solid oklch(1 0 0 / 0.07);
+    border-radius: var(--radius-md);
+    padding: 3px;
+  }
+
+  &__tipoBtn {
+    padding: 5px 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: oklch(0.5 0 0);
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+
+    &:hover:not(&--active) {
+      color: oklch(0.72 0 0);
+    }
+
+    &--active {
+      background: oklch(0.2 0.01 200);
+      color: oklch(0.88 0 0);
+    }
   }
 
   &__error {
@@ -100,7 +134,10 @@
   }
 }
 
-.ndvi {
+// Antes .ndvi — genérico para cualquier índice.
+// Los colores ya no son variables fijas: llegan inline desde
+// los `ranges` de cada índice (ver AnalisisRepository.getIndices).
+.indice {
   display: flex;
   align-items: center;
   gap: 6px;

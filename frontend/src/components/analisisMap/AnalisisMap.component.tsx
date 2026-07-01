@@ -3,22 +3,22 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { NdviAnalysisMetadataDTO } from "@agrospace/shared/dtos/Ndvi.dto";
+import type { AnalysisMetadataDTO } from "@agrospace/shared/dtos/Analisis.dto";
 import type {
   CadastralParcelDTO,
   LonLat,
 } from "@agrospace/shared/dtos/Catastro.dto";
 
-interface NdviMapProps {
+interface AnalisisMapProps {
   parcel: CadastralParcelDTO;
-  ndvi?: {
+  analisis?: {
     imageUrl: string;
-    metadata: NdviAnalysisMetadataDTO;
+    metadata: AnalysisMetadataDTO;
   };
 }
 
-const NDVI_SOURCE_ID = "ndvi-source";
-const NDVI_LAYER_ID = "ndvi-layer";
+const ANALISIS_SOURCE_ID = "analisis-source";
+const ANALISIS_LAYER_ID = "analisis-layer";
 const PARCEL_SOURCE_ID = "parcel-source";
 const PARCEL_FILL_LAYER_ID = "parcel-fill";
 const PARCEL_LINE_LAYER_ID = "parcel-line";
@@ -44,7 +44,7 @@ const toGeoJSON = (polygon: LonLat[]): GeoJSON.Feature<GeoJSON.Polygon> => ({
   },
 });
 
-export const NdviMap = ({ parcel, ndvi }: NdviMapProps) => {
+export const AnalisisMap = ({ parcel, analisis }: AnalisisMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
 
@@ -112,11 +112,11 @@ export const NdviMap = ({ parcel, ndvi }: NdviMapProps) => {
     const updateParcel = () => {
       if (!map.current) return;
 
-      if (map.current.getLayer(NDVI_LAYER_ID)) {
-        map.current.removeLayer(NDVI_LAYER_ID);
+      if (map.current.getLayer(ANALISIS_LAYER_ID)) {
+        map.current.removeLayer(ANALISIS_LAYER_ID);
       }
-      if (map.current.getSource(NDVI_SOURCE_ID)) {
-        map.current.removeSource(NDVI_SOURCE_ID);
+      if (map.current.getSource(ANALISIS_SOURCE_ID)) {
+        map.current.removeSource(ANALISIS_SOURCE_ID);
       }
 
       const source = map.current.getSource(PARCEL_SOURCE_ID) as
@@ -141,46 +141,58 @@ export const NdviMap = ({ parcel, ndvi }: NdviMapProps) => {
   }, [parcel]);
 
   useEffect(() => {
-    if (!map.current || !ndvi) return;
+    if (!map.current) return;
 
-    const addNdviLayer = () => {
-      if (!map.current || !ndvi) return;
+    if (!analisis) {
+      if (map.current.getLayer(ANALISIS_LAYER_ID)) {
+        map.current.removeLayer(ANALISIS_LAYER_ID);
+      }
+      if (map.current.getSource(ANALISIS_SOURCE_ID)) {
+        map.current.removeSource(ANALISIS_SOURCE_ID);
+      }
+      return;
+    }
+
+    const addAnalisisLayer = () => {
+      if (!map.current || !analisis) return;
 
       if (!map.current.getSource(PARCEL_SOURCE_ID)) {
-        setTimeout(addNdviLayer, 150);
+        timeoutId = setTimeout(addAnalisisLayer, 150);
         return;
       }
 
-      const existing = map.current.getSource(NDVI_SOURCE_ID);
+      const existing = map.current.getSource(ANALISIS_SOURCE_ID);
 
       if (existing) {
         (existing as maplibregl.ImageSource).updateImage({
-          url: ndvi.imageUrl,
-          coordinates: bboxToCorners(ndvi.metadata.bbox),
+          url: analisis.imageUrl,
+          coordinates: bboxToCorners(analisis.metadata.bbox),
         });
         return;
       }
 
-      map.current.addSource(NDVI_SOURCE_ID, {
+      map.current.addSource(ANALISIS_SOURCE_ID, {
         type: "image",
-        url: ndvi.imageUrl,
-        coordinates: bboxToCorners(ndvi.metadata.bbox),
+        url: analisis.imageUrl,
+        coordinates: bboxToCorners(analisis.metadata.bbox),
       });
 
       map.current.addLayer(
         {
-          id: NDVI_LAYER_ID,
+          id: ANALISIS_LAYER_ID,
           type: "raster",
-          source: NDVI_SOURCE_ID,
+          source: ANALISIS_SOURCE_ID,
           paint: { "raster-opacity": 0.75 },
         },
         PARCEL_FILL_LAYER_ID,
       );
     };
 
-    setTimeout(addNdviLayer, 300);
-  }, [ndvi]);
+    let timeoutId = setTimeout(addAnalisisLayer, 300);
 
+    // 🔑 Cancela el timeout si "analisis" cambia antes de que se dispare
+    return () => clearTimeout(timeoutId);
+  }, [analisis]);
   return (
     <div
       ref={mapContainer}

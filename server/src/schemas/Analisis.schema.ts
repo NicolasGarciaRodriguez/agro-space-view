@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-
+import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 export interface IClima {
   tempMaxAvg: number;
   tempMinAvg: number;
@@ -14,13 +14,14 @@ export interface ITimeSeriesPoint {
   max: number;
 }
 
-export interface IAnalisisNdvi {
+export interface IAnalisis {
   userId: mongoose.Types.ObjectId;
   explotacionId: mongoose.Types.ObjectId;
   parcelaId: mongoose.Types.ObjectId;
+  tipo: IndiceTipo; // ← nuevo: ndvi | ndwi | ndre
   dateFrom: string;
   dateTo: string;
-  ndviMedio: number;
+  indiceMedio: number; // ← antes ndviMedio, ahora genérico
   cloudCover: number;
   usedImageId: string;
   usedImageDate: string;
@@ -31,7 +32,7 @@ export interface IAnalisisNdvi {
   updatedAt: Date;
 }
 
-export interface IAnalisisNdviDocument extends IAnalisisNdvi, Document {}
+export interface IAnalisisDocument extends IAnalisis, Document {}
 
 const ClimaSchema = new Schema<IClima>(
   {
@@ -53,7 +54,7 @@ const TimeSeriesPointSchema = new Schema<ITimeSeriesPoint>(
   { _id: false },
 );
 
-const AnalisisNdviSchema = new Schema<IAnalisisNdviDocument>(
+const AnalisisSchema = new Schema<IAnalisisDocument>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -73,9 +74,14 @@ const AnalisisNdviSchema = new Schema<IAnalisisNdviDocument>(
       required: true,
       index: true,
     },
-    dateFrom: { type: String, required: true },
+    tipo: {
+      type: String,
+      enum: Object.values(IndiceTipo),
+      required: true,
+      index: true,
+    },    dateFrom: { type: String, required: true },
     dateTo: { type: String, required: true },
-    ndviMedio: { type: Number, required: true },
+    indiceMedio: { type: Number, required: true },
     cloudCover: { type: Number, required: true },
     usedImageId: { type: String, default: "" },
     usedImageDate: { type: String, default: "" },
@@ -86,5 +92,9 @@ const AnalisisNdviSchema = new Schema<IAnalisisNdviDocument>(
   { timestamps: true, versionKey: false },
 );
 
-export const AnalisisNdviModel: Model<IAnalisisNdviDocument> =
-  mongoose.model<IAnalisisNdviDocument>("AnalisisNdvi", AnalisisNdviSchema);
+// Índice compuesto: consultar el último análisis de un tipo por parcela
+// es la query más frecuente (histórico, insights). Lo optimizamos.
+AnalisisSchema.index({ parcelaId: 1, tipo: 1, createdAt: -1 });
+
+export const AnalisisModel: Model<IAnalisisDocument> =
+  mongoose.model<IAnalisisDocument>("Analisis", AnalisisSchema);

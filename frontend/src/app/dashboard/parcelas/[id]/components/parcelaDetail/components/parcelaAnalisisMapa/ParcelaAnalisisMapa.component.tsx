@@ -2,35 +2,41 @@
 
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { NdviRepository } from "@agrospace/shared/repositories/Ndvi.repository";
+import { AnalisisRepository } from "@agrospace/shared/repositories/Analisis.repository";
 import { WeatherRepository } from "@agrospace/shared/repositories/Weather.repository";
-import { AnalisisNdviRepository } from "@agrospace/shared/repositories/AnalisisNdvi.repository";
-import { NdviMetadataCard } from "@/components/ndviMetaCard/NdviMetaCard.component";
-import { NdviChart } from "@/components/ndviChart/NdviChart.component";
+import { AnalisisMetadataCard } from "@/components/analisisMetaCard/AnalisisMetaCard.component";
+import { AnalisisChart } from "@/components/analisisChart/AnalisisChart.component";
+import { AnalisisLegend } from "@/components/analisisMap/components/analisisLegend/AnalisisLegend.component";
 import { DateRangePicker } from "@/components/dateRangePicker/DateRangePicker.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
 import type { DateRangeValue } from "@/components/dateRangePicker/DateRangePicker.component";
-import type { NdviAnalysisResult } from "@agrospace/shared/repositories/Ndvi.repository";
+import type { AnalysisResult } from "@agrospace/shared/repositories/Analisis.repository";
 import type { WeatherSummaryDTO } from "@agrospace/shared/dtos/Weather.dto";
-import type { NdviTimeSeriesResponseDTO } from "@agrospace/shared/dtos/Ndvi.dto";
+import type {
+  TimeSeriesResponseDTO,
+  AnalisisDTO,
+  IndiceDefinitionDTO,
+} from "@agrospace/shared/dtos/Analisis.dto";
+import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
-import type { AnalisisNdviDTO } from "@agrospace/shared/dtos/AnalisisNdvi.dto";
-import { DEFAULT_DATE_RANGE } from "./ParcelaNdvi.config";
-import styles from "./PacrelaNdvi.module.scss";
-import { NdviLegend } from "@/components/ndviMap/components/ndviLegend/NdviLegend.component";
+import { DEFAULT_DATE_RANGE } from "./ParcelaAnalisisMapa.config";
+import styles from "./ParcelaAnalisisMapa.module.scss";
 
-const NdviMap = dynamic(
-  () => import("@/components/ndviMap/NdviMap.component").then((m) => m.NdviMap),
+const AnalisisMap = dynamic(
+  () =>
+    import("@/components/analisisMap/AnalisisMap.component").then(
+      (m) => m.AnalisisMap,
+    ),
   {
     ssr: false,
     loading: () => (
-      <div className={styles.ndvi__mapLoading}>Cargando mapa…</div>
+      <div className={styles.analisis__mapLoading}>Cargando mapa…</div>
     ),
   },
 );
 
-interface ParcelaNdviProps {
+interface ParcelaAnalisisMapaProps {
   parcela: ParcelaDTO;
 }
 
@@ -47,7 +53,7 @@ const toMapParcel = (parcela: ParcelaDTO) => ({
   polygon: parcela.polygon,
 });
 
-const formatAnalisisLabel = (analisis: AnalisisNdviDTO): string => {
+const formatAnalisisLabel = (analisis: AnalisisDTO): string => {
   const from = new Date(analisis.dateFrom).toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "short",
@@ -58,37 +64,54 @@ const formatAnalisisLabel = (analisis: AnalisisNdviDTO): string => {
     month: "short",
     year: "numeric",
   });
-  return `${from} → ${to} — NDVI ${analisis.ndviMedio.toFixed(3)}`;
+  return `${from} → ${to} — ${analisis.indiceMedio.toFixed(3)}`;
 };
 
-export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
+export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
+  const [indices, setIndices] = useState<IndiceDefinitionDTO[]>([]);
+  const [tipoActivo, setTipoActivo] = useState<IndiceTipo>(IndiceTipo.NDVI);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] =
     useState<DateRangeValue>(DEFAULT_DATE_RANGE);
-  const [ndviResult, setNdviResult] = useState<NdviAnalysisResult | null>(null);
+
+  const [analisisResult, setAnalisisResult] = useState<AnalysisResult | null>(
+    null,
+  );
   const [weatherResult, setWeatherResult] = useState<WeatherSummaryDTO | null>(
     null,
   );
   const [timeSeriesResult, setTimeSeriesResult] =
-    useState<NdviTimeSeriesResponseDTO | null>(null);
-  const [historial, setHistorial] = useState<AnalisisNdviDTO[]>([]);
-  const [selectedAnalisis, setSelectedAnalisis] =
-    useState<AnalisisNdviDTO | null>(null);
+    useState<TimeSeriesResponseDTO | null>(null);
+  const [historial, setHistorial] = useState<AnalisisDTO[]>([]);
+  const [selectedAnalisis, setSelectedAnalisis] = useState<AnalisisDTO | null>(
+    null,
+  );
 
   const clearError = useCallback(() => setError(null), []);
 
+  const indiceActivo = indices.find((i) => i.tipo === tipoActivo);
+
+  // Carga la lista de índices disponibles una sola vez
+  useEffect(() => {
+    AnalisisRepository.getIndices()
+      .then(setIndices)
+      .catch(() => {});
+  }, []);
+
+  // Carga el histórico del tipo activo cada vez que cambia parcela o tipo
   useEffect(() => {
     const loadHistorial = async () => {
       setIsLoadingHistory(true);
       try {
-        const data = await AnalisisNdviRepository.getByParcela(parcela._id);
+        const data = await AnalisisRepository.getByParcela(
+          parcela._id,
+          tipoActivo,
+        );
         setHistorial(data);
-
-        if (data.length > 0) {
-          setSelectedAnalisis(data[0]);
-        }
+        setSelectedAnalisis(data.length > 0 ? data[0] : null);
       } catch {
       } finally {
         setIsLoadingHistory(false);
@@ -96,16 +119,18 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
     };
 
     loadHistorial();
-  }, [parcela._id]);
+  }, [parcela._id, tipoActivo]);
 
   useEffect(() => {
     return () => {
-      if (ndviResult?.imageUrl) URL.revokeObjectURL(ndviResult.imageUrl);
+      if (analisisResult?.imageUrl)
+        URL.revokeObjectURL(analisisResult.imageUrl);
     };
-  }, [ndviResult?.imageUrl]);
+  }, [analisisResult?.imageUrl]);
 
+  // Reset al cambiar de parcela
   useEffect(() => {
-    setNdviResult(null);
+    setAnalisisResult(null);
     setWeatherResult(null);
     setTimeSeriesResult(null);
     setSelectedAnalisis(null);
@@ -113,12 +138,21 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
     clearError();
   }, [parcela._id]);
 
-  const handleSelectAnalisis = (analisis: AnalisisNdviDTO) => {
+  const handleSelectAnalisis = (analisis: AnalisisDTO) => {
     setSelectedAnalisis(analisis);
-    if (ndviResult?.imageUrl) URL.revokeObjectURL(ndviResult.imageUrl);
-    setNdviResult(null);
+    if (analisisResult?.imageUrl) URL.revokeObjectURL(analisisResult.imageUrl);
+    setAnalisisResult(null);
     setWeatherResult(null);
     setTimeSeriesResult(null);
+  };
+
+  const handleChangeTipo = (tipo: IndiceTipo) => {
+    setTipoActivo(tipo);
+    if (analisisResult?.imageUrl) URL.revokeObjectURL(analisisResult.imageUrl);
+    setAnalisisResult(null);
+    setWeatherResult(null);
+    setTimeSeriesResult(null);
+    clearError();
   };
 
   const handleAnalyse = async () => {
@@ -126,11 +160,12 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
     clearError();
     setSelectedAnalisis(null);
 
-    if (ndviResult?.imageUrl) URL.revokeObjectURL(ndviResult.imageUrl);
+    if (analisisResult?.imageUrl) URL.revokeObjectURL(analisisResult.imageUrl);
 
     try {
-      const [ndvi, weather, timeSeries] = await Promise.all([
-        NdviRepository.analyseNdvi({
+      const [analisis, weather, timeSeries] = await Promise.all([
+        AnalisisRepository.analyse({
+          tipo: tipoActivo,
           bbox: parcela.bbox,
           dateFrom: dateRange.dateFrom,
           dateTo: dateRange.dateTo,
@@ -142,7 +177,8 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
           dateFrom: dateRange.dateFrom,
           dateTo: dateRange.dateTo,
         }),
-        NdviRepository.getTimeSeries({
+        AnalisisRepository.getTimeSeries({
+          tipo: tipoActivo,
           bbox: parcela.bbox,
           dateFrom: dateRange.dateFrom,
           dateTo: dateRange.dateTo,
@@ -150,16 +186,17 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
         }),
       ]);
 
-      setNdviResult(ndvi);
+      setAnalisisResult(analisis);
       setWeatherResult(weather);
       setTimeSeriesResult(timeSeries);
 
-      AnalisisNdviRepository.create({
+      AnalisisRepository.create({
         parcelaId: parcela._id,
         explotacionId: parcela.explotacionId,
+        tipo: tipoActivo,
         dateFrom: dateRange.dateFrom,
         dateTo: dateRange.dateTo,
-        ndviMedio:
+        indiceMedio:
           timeSeries.points.length > 0
             ? Math.round(
                 (timeSeries.points.reduce((a, b) => a + b.mean, 0) /
@@ -167,10 +204,10 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
                   1000,
               ) / 1000
             : 0,
-        cloudCover: ndvi.metadata.cloudCover,
-        usedImageId: ndvi.metadata.usedImageId,
-        usedImageDate: ndvi.metadata.usedImageDate,
-        imageBase64: ndvi.imageBase64,
+        cloudCover: analisis.metadata.cloudCover,
+        usedImageId: analisis.metadata.usedImageId,
+        usedImageDate: analisis.metadata.usedImageDate,
+        imageBase64: analisis.imageBase64,
         clima: weather.stats,
         timeSeries: timeSeries.points,
       })
@@ -179,10 +216,15 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
         })
         .catch(() => {});
     } catch (err) {
-      setNdviResult(null);
+      setAnalisisResult(null);
       setWeatherResult(null);
       setTimeSeriesResult(null);
-      setError(getErrorMessage(err, "No se pudo analizar el NDVI."));
+      setError(
+        getErrorMessage(
+          err,
+          `No se pudo analizar el ${indiceActivo?.label ?? tipoActivo}.`,
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -190,12 +232,13 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
 
   const mapParcel = toMapParcel(parcela);
 
-  const mapNdvi = ndviResult
-    ? { imageUrl: ndviResult.imageUrl, metadata: ndviResult.metadata }
+  const mapAnalisis = analisisResult
+    ? { imageUrl: analisisResult.imageUrl, metadata: analisisResult.metadata }
     : selectedAnalisis
       ? {
           imageUrl: selectedAnalisis.imageUrl,
           metadata: {
+            tipo: selectedAnalisis.tipo,
             usedImageId: selectedAnalisis.usedImageId,
             usedImageDate: selectedAnalisis.usedImageDate,
             cloudCover: selectedAnalisis.cloudCover,
@@ -222,16 +265,40 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
       : null);
 
   return (
-    <section className={styles.ndvi}>
-      <h2 className={styles.ndvi__title}>Análisis NDVI</h2>
+    <section className={styles.analisis}>
+      <div className={styles.analisis__header}>
+        <h2 className={styles.analisis__title}>Análisis satelital</h2>
+
+        {indices.length > 0 && (
+          <div className={styles.analisis__tipoSelector}>
+            {indices.map((indice) => (
+              <button
+                key={indice.tipo}
+                className={[
+                  styles.analisis__tipoBtn,
+                  tipoActivo === indice.tipo
+                    ? styles["analisis__tipoBtn--active"]
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => handleChangeTipo(indice.tipo)}
+                disabled={isLoading}
+              >
+                {indice.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {(historial.length > 0 || isLoadingHistory) && (
-        <div className={styles.ndvi__history}>
-          <label className={styles.ndvi__history__label}>
+        <div className={styles.analisis__history}>
+          <label className={styles.analisis__history__label}>
             Análisis anteriores
           </label>
           <select
-            className={styles.ndvi__history__select}
+            className={styles.analisis__history__select}
             value={selectedAnalisis?._id ?? ""}
             onChange={(e) => {
               const found = historial.find((a) => a._id === e.target.value);
@@ -257,7 +324,7 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
         </div>
       )}
 
-      <div className={styles.ndvi__controls}>
+      <div className={styles.analisis__controls}>
         <DateRangePicker
           value={dateRange}
           onChange={setDateRange}
@@ -268,22 +335,24 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
           loading={isLoading}
           disabled={isLoading}
         >
-          Analizar NDVI
+          Analizar {indiceActivo?.label ?? tipoActivo.toUpperCase()}
         </Button>
       </div>
 
       {error && (
-        <p className={styles.ndvi__error} role="alert">
+        <p className={styles.analisis__error} role="alert">
           {error}
         </p>
       )}
 
-      <NdviMap parcel={mapParcel} ndvi={mapNdvi} />
-      <NdviLegend />
+      <AnalisisMap parcel={mapParcel} analisis={mapAnalisis} />
+      {indiceActivo && <AnalisisLegend indice={indiceActivo} />}
 
-      {(ndviResult ?? selectedAnalisis) && (
-        <div className={styles.ndvi__results}>
-          {ndviResult && <NdviMetadataCard metadata={ndviResult.metadata} />}
+      {(analisisResult ?? selectedAnalisis) && (
+        <div className={styles.analisis__results}>
+          {analisisResult && (
+            <AnalisisMetadataCard metadata={analisisResult.metadata} />
+          )}
 
           {displayWeather && (
             <section className={styles.weather}>
@@ -316,7 +385,12 @@ export const ParcelaNdvi = ({ parcela }: ParcelaNdviProps) => {
             </section>
           )}
 
-          {displayTimeSeries && <NdviChart points={displayTimeSeries.points} />}
+          {displayTimeSeries && indiceActivo && (
+            <AnalisisChart
+              points={displayTimeSeries.points}
+              indice={indiceActivo}
+            />
+          )}
         </div>
       )}
     </section>

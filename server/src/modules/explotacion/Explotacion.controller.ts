@@ -10,8 +10,9 @@ import {
   type DeleteExplotacionRequest,
   GetExplotacionStatsRequest,
 } from "./Explotacion.interface.js";
-import { AnalisisNdviModel } from "../../schemas/AnalisisNdvi.schema.js";
+import { AnalisisModel } from "../../schemas/Analisis.schema.js";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
+import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import { NDVI_ALERT_THRESHOLD } from "./Explotacion.config.js";
 
 const getAll = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -123,21 +124,23 @@ const getStats = async (
   }
 
   const parcelas = await ParcelaModel.find({ explotacionId, userId }).lean();
-
   const parcelaIds = parcelas.map((p) => p._id);
 
-  const ultimosAnalisis = await AnalisisNdviModel.aggregate([
+  // Las stats del dashboard se basan en NDVI (salud general de la
+  // vegetación). Filtramos por tipo para no mezclar índices distintos.
+  const ultimosAnalisis = await AnalisisModel.aggregate([
     {
       $match: {
         parcelaId: { $in: parcelaIds },
         userId: new mongoose.Types.ObjectId(userId),
+        tipo: IndiceTipo.NDVI,
       },
     },
     { $sort: { createdAt: -1 } },
     {
       $group: {
         _id: "$parcelaId",
-        ndviMedio: { $first: "$ndviMedio" },
+        indiceMedio: { $first: "$indiceMedio" },
         createdAt: { $first: "$createdAt" },
         dateFrom: { $first: "$dateFrom" },
         dateTo: { $first: "$dateTo" },
@@ -145,9 +148,8 @@ const getStats = async (
     },
   ]);
 
-  // Parcela con mejor y peor NDVI
   const analisisSorted = [...ultimosAnalisis].sort(
-    (a, b) => b.ndviMedio - a.ndviMedio,
+    (a, b) => b.indiceMedio - a.indiceMedio,
   );
 
   const parcelaMap = Object.fromEntries(
@@ -172,7 +174,7 @@ const getStats = async (
   const ndviMedio =
     ultimosAnalisis.length > 0
       ? Math.round(
-          (ultimosAnalisis.reduce((a, b) => a + b.ndviMedio, 0) /
+          (ultimosAnalisis.reduce((a, b) => a + b.indiceMedio, 0) /
             ultimosAnalisis.length) *
             1000,
         ) / 1000
@@ -187,14 +189,14 @@ const getStats = async (
     parcelaMejor: mejor
       ? {
           nombre: parcelaMap[mejor._id.toString()]?.nombre ?? "",
-          ndvi: mejor.ndviMedio,
+          ndvi: mejor.indiceMedio,
         }
       : null,
     parcelaPeor:
-      peor && peor.ndviMedio < NDVI_ALERT_THRESHOLD
+      peor && peor.indiceMedio < NDVI_ALERT_THRESHOLD
         ? {
             nombre: parcelaMap[peor._id.toString()]?.nombre ?? "",
-            ndvi: peor.ndviMedio,
+            ndvi: peor.indiceMedio,
           }
         : null,
   });

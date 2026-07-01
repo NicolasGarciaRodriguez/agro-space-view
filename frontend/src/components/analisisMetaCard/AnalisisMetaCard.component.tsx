@@ -1,9 +1,9 @@
 "use client";
 
-import type { NdviAnalysisMetadataDTO } from "@agrospace/shared/dtos/Ndvi.dto";
+import type { AnalysisMetadataDTO } from "@agrospace/shared/dtos/Analisis.dto";
 
-interface NdviMetadataCardProps {
-  metadata: NdviAnalysisMetadataDTO;
+interface AnalisisMetadataCardProps {
+  metadata: AnalysisMetadataDTO;
 }
 
 const formatDate = (isoDate: string): string => {
@@ -20,7 +20,9 @@ const cloudCoverColor = (cover: number): string => {
   return "text-red-600 dark:text-red-400";
 };
 
-export const NdviMetadataCard = ({ metadata }: NdviMetadataCardProps) => {
+export const AnalisisMetadataCard = ({
+  metadata,
+}: AnalisisMetadataCardProps) => {
   return (
     <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
       <h2 className="mb-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
@@ -45,25 +47,6 @@ export const NdviMetadataCard = ({ metadata }: NdviMetadataCardProps) => {
           {metadata.bbox.join(", ")}
         </dd>
       </dl>
-
-      <div className="mt-4 flex items-center gap-3 text-xs text-neutral-500">
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-green-600"></span>
-          Vegetación sana
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-yellow-400"></span>
-          Moderada
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-red-600"></span>
-          Estrés / suelo
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-gray-400"></span>
-          Agua / urbano
-        </span>
-      </div>
     </div>
   );
 };
