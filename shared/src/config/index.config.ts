@@ -1,5 +1,3 @@
-import process from "node:process";
-
 import localConfig from "./local.config.json" with { type: "json" };
 import productionConfig from "./prod.config.json" with { type: "json" };
 
