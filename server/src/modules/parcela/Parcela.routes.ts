@@ -12,6 +12,7 @@ import {
   type DeleteParcelaRequest,
 } from "./Parcela.interface.js";
 import { authenticate } from "../../middleware/Auth.middleware.js";
+import { UsageLimitExceededError } from "../usageLimits/UsageLimits.interface.js";
 
 const PREFIX = `${PARCELA_ROUTE_PREFIX}/:explotacionId/parcelas`;
 
@@ -63,7 +64,13 @@ export default function ParcelaRoutes(
       try {
         return await ParcelaController.create(request, reply);
       } catch (error) {
-        return handleParcelaErrors(error, reply);
+        if (error instanceof ParcelaAlreadyExistsError) {
+          return reply.status(409).send({ error: error.message });
+        }
+        if (error instanceof UsageLimitExceededError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
       }
     },
   );

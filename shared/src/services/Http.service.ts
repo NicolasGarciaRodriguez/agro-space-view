@@ -132,7 +132,8 @@ const del = async (
       return response.json().then((errorBody) => {
         return Promise.reject({
           status: response.status,
-          message: errorBody.message ?? "Unknown error occurred",
+          message:
+            errorBody.error ?? errorBody.message ?? "Unknown error occurred",
           code: errorBody.code,
           isKO: errorBody.isKO,
         });
@@ -187,7 +188,9 @@ const __handleResponse = async (response: Response): Promise<unknown> => {
     try {
       const errorBody = await response.json();
 
-      if (errorBody.message) {
+      if (errorBody.error) {
+        errorMsg = errorBody.error;
+      } else if (errorBody.message) {
         errorMsg = errorBody.message;
       }
 
@@ -256,7 +259,8 @@ const postBlob = async (
       return response.json().then((errorBody) => {
         return Promise.reject({
           status: response.status,
-          message: errorBody.message ?? "Unknown error occurred",
+          message:
+            errorBody.error ?? errorBody.message ?? "Unknown error occurred",
           code: errorBody.code,
           isKO: errorBody.isKO,
         });

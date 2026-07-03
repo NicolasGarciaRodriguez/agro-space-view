@@ -13,6 +13,8 @@ import {
   type DeleteAnalisisRequest,
 } from "./Analisis.interface.js";
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
+import { InsightsService } from "../insights/Insights.service.js";
+import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
 
 const isValidTipo = (tipo: string): tipo is IndiceTipo =>
   Object.values(IndiceTipo).includes(tipo as IndiceTipo);
@@ -25,10 +27,16 @@ const analyse = async (
   request: AnalyseRequest,
   reply: FastifyReply,
 ): Promise<void> => {
+  const { userId } = request.user;
   const { tipo } = request.body;
+
   if (!isValidTipo(tipo)) {
     return reply.status(400).send({ error: `Índice no soportado: ${tipo}` });
   }
+
+  // Bloquea ANTES de llamar a Sentinel Hub, para no gastar la
+  // llamada si el usuario ya agotó su cupo.
+  await UsageLimitsService.assertCanAnalyse(userId, tipo);
 
   const { image, metadata } = await AnalisisService.analyse(request.body);
 
@@ -108,6 +116,14 @@ const create = async (request: CreateAnalisisRequest, reply: FastifyReply) => {
     clima,
     timeSeries,
   });
+
+  // Fire and forget: no bloquea la respuesta al usuario. Si falla,
+  // se loguea dentro del propio service y no afecta al guardado.
+  InsightsService.maybeGenerateParcelaInsight(
+    userId,
+    explotacionId,
+    parcelaId,
+  ).catch(() => {});
 
   return reply.status(201).send(analisis);
 };

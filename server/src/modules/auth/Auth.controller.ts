@@ -10,6 +10,8 @@ import {
   type JWTPayload,
 } from "./Auth.interface.js";
 import { UserModel } from "../../schemas/User.schema.js";
+import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 
 const registration = async (
   request: RegistrationRequest,
@@ -28,13 +30,15 @@ const registration = async (
     nombre,
     apellidos,
     telefono,
-    role: "user",
+    role: UserRole.USUARIO,
+    plan: UserPlan.GRATIS,
   });
 
   const payload: JWTPayload = {
     userId: user._id.toString(),
     email: user.email,
     role: user.role,
+    plan: user.plan,
   };
 
   const token = await reply.jwtSign(payload, { expiresIn: JWT_EXPIRY });
@@ -47,6 +51,7 @@ const registration = async (
       nombre: user.nombre,
       apellidos: user.apellidos,
       role: user.role,
+      plan: user.plan,
     },
   };
 
@@ -69,6 +74,7 @@ const logIn = async (
     userId: user._id.toString(),
     email: user.email,
     role: user.role,
+    plan: user.plan,
   };
 
   const token = await reply.jwtSign(payload, { expiresIn: JWT_EXPIRY });
@@ -81,6 +87,7 @@ const logIn = async (
       nombre: user.nombre,
       apellidos: user.apellidos,
       role: user.role,
+      plan: user.plan,
     },
   };
 

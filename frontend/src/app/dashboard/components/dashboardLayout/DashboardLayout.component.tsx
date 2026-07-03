@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "./components/sidebar/Sidebar.component";
 import { TopBar } from "./components/topbar/Topbar.component";
+import { Chatbot } from "@/components/chatbot/Chatbot.component";
 import styles from "./DashboardLayout.module.scss";
 import { DashboardLayoutProps } from "./DashboardLayout.interface";
 
@@ -16,6 +17,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <TopBar onMenuOpen={() => setSidebarOpen(true)} />
         <main className={styles.layout__main}>{children}</main>
       </div>
+      <Chatbot />
     </div>
   );
 };

@@ -1,8 +1,8 @@
 import type {
   EntradaDatosDTO,
-  EntradaTipo,
   CuadernoEntradaDTO,
 } from "@agrospace/shared/dtos/CuadernoEntrada.dto";
+import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
 export interface AddEntradaCuadernoModalProps {
   parcelaId: string;

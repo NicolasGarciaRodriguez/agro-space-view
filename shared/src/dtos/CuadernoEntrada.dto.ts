@@ -1,9 +1,4 @@
-export type EntradaTipo =
-  | "riego"
-  | "fertilizacion"
-  | "tratamiento"
-  | "cosecha"
-  | "observacion";
+import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
 export interface EntradaDatosDTO {
   litrosPorM2?: number;

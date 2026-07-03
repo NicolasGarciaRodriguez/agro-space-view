@@ -4,6 +4,135 @@
   border-radius: var(--radius-lg);
   padding: 1.5rem;
 
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0;
+  }
+
+  &__spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid oklch(1 0 0 / 0.1);
+    border-top-color: oklch(0.55 0.15 150);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  &__placeholder {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background: oklch(0.12 0.01 220 / 0.6);
+    border: 1px solid oklch(1 0 0 / 0.06);
+
+    &__text {
+      font-size: 0.875rem;
+      color: oklch(0.55 0 0);
+      line-height: 1.6;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__alerta {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid;
+
+    &--ninguna {
+      background: oklch(0.55 0.15 150 / 0.1);
+      border-color: oklch(0.55 0.15 150 / 0.3);
+    }
+
+    &--atencion {
+      background: oklch(0.65 0.15 80 / 0.1);
+      border-color: oklch(0.65 0.15 80 / 0.3);
+    }
+
+    &--urgente {
+      background: oklch(0.5 0.18 25 / 0.1);
+      border-color: oklch(0.5 0.18 25 / 0.3);
+    }
+
+    &__icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+
+  &__resumen {
+    font-size: 0.9375rem;
+    color: oklch(0.85 0 0);
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  &__alertaMensaje {
+    font-size: 0.8125rem;
+    color: oklch(0.6 0 0);
+    padding: 0 4px;
+  }
+
+  &__hallazgos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  &__hallazgo {
+    font-size: 0.8125rem;
+    color: oklch(0.65 0 0);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+
+    &::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: oklch(0.5 0.15 150);
+    }
+  }
+
+  &__recomendacion {
+    padding: 0.875rem 1rem;
+    background: oklch(0.16 0.01 200 / 0.6);
+    border-radius: var(--radius-md);
+    border-left: 2px solid oklch(0.55 0.15 150);
+
+    &__label {
+      display: block;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: oklch(0.5 0.15 150);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    p {
+      font-size: 0.875rem;
+      color: oklch(0.78 0 0);
+      line-height: 1.5;
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   &__header {
     display: flex;
     align-items: center;

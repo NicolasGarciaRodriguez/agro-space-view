@@ -13,7 +13,7 @@ import {
   type UpdateParcelaRequest,
   type DeleteParcelaRequest,
 } from "./Parcela.interface.js";
-
+import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
 
 const verifyExplotacion = async (explotacionId: string, userId: string) => {
   if (!mongoose.isValidObjectId(explotacionId)) {
@@ -27,7 +27,6 @@ const verifyExplotacion = async (explotacionId: string, userId: string) => {
   return explotacion;
 };
 
-
 const getAll = async (request: GetParcelasRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId } = request.params;
@@ -40,7 +39,6 @@ const getAll = async (request: GetParcelasRequest, reply: FastifyReply) => {
 
   return reply.send(parcelas);
 };
-
 
 const getById = async (request: GetParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;
@@ -57,13 +55,14 @@ const getById = async (request: GetParcelaRequest, reply: FastifyReply) => {
   return reply.send(parcela);
 };
 
-
 const create = async (request: CreateParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId } = request.params;
   const { nombre, refCatastral, cultivo } = request.body;
 
   const explotacion = await verifyExplotacion(explotacionId, userId);
+
+  await UsageLimitsService.assertCanCreateParcela(userId);
 
   const existing = await ParcelaModel.findOne({ explotacionId, refCatastral });
   if (existing) throw new ParcelaAlreadyExistsError();
@@ -90,7 +89,6 @@ const create = async (request: CreateParcelaRequest, reply: FastifyReply) => {
   return reply.status(201).send(parcela);
 };
 
-
 const update = async (request: UpdateParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId, id } = request.params;
@@ -108,7 +106,6 @@ const update = async (request: UpdateParcelaRequest, reply: FastifyReply) => {
 
   return reply.send(parcela);
 };
-
 
 const remove = async (request: DeleteParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;

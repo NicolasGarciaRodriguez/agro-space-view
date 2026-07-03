@@ -1,11 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-
-export type EntradaTipo =
-  | "riego"
-  | "fertilizacion"
-  | "tratamiento"
-  | "cosecha"
-  | "observacion";
+import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
 export interface IEntradaDatos {
   litrosPorM2?: number;
@@ -81,7 +75,7 @@ const CuadernoEntradaSchema = new Schema<ICuadernoEntradaDocument>(
     fecha: { type: Date, required: true },
     tipo: {
       type: String,
-      enum: ["riego", "fertilizacion", "tratamiento", "cosecha", "observacion"],
+      enum: Object.values(EntradaTipo),
       required: true,
     },
     datos: { type: EntradaDatosSchema, required: true },

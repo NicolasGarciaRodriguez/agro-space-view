@@ -11,6 +11,7 @@ import type {
   GetAnalisisRequest,
   DeleteAnalisisRequest,
 } from "./Analisis.interface.js";
+import { UsageLimitExceededError } from "../usageLimits/UsageLimits.interface.js";
 
 export default function AnalisisRoutes(
   fastify: FastifyInstance,
@@ -29,6 +30,9 @@ export default function AnalisisRoutes(
       } catch (error) {
         if (error instanceof NoImagesFoundError) {
           return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof UsageLimitExceededError) {
+          return reply.status(403).send({ error: error.message });
         }
         throw error;
       }

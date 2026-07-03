@@ -7,6 +7,8 @@ import ExplotacionRoutes from "../modules/explotacion/Explotacion.routes.js";
 import ParcelaRoutes from "../modules/parcela/Parcela.routes.js";
 import CuadernoEntradaRoutes from "../modules/cuadernoEntrada/CuadernoEntrada.routes.js";
 import AnalisisRoutes from "../modules/analisis/Analisis.routes.js";
+import InsightsRoutes from "../modules/insights/Insights.routes.js";
+import ChatbotRoutes from "../modules/chatbot/Chatbot.routes.js";
 
 export default async function routes(fastify: FastifyInstance) {
   await fastify.register(AuthRoutes);
@@ -17,4 +19,6 @@ export default async function routes(fastify: FastifyInstance) {
   await fastify.register(ParcelaRoutes);
   await fastify.register(AnalisisRoutes);
   await fastify.register(CuadernoEntradaRoutes);
+  await fastify.register(InsightsRoutes);
+  await fastify.register(ChatbotRoutes);
 }

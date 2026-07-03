@@ -15,11 +15,9 @@ import {
   type AddEntradaCuadernoModalProps,
 } from "./AddEntradaCuadernoModal.interface";
 import { validateEntradas } from "./AddEntradaCuadernoModal.config";
-import type {
-  EntradaTipo,
-  EntradaDatosDTO,
-} from "@agrospace/shared/dtos/CuadernoEntrada.dto";
+import type { EntradaDatosDTO } from "@agrospace/shared/dtos/CuadernoEntrada.dto";
 import styles from "./AddEntradaCuadernoModal.module.scss";
+import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
 const TIPOS = Object.entries(TIPO_CONFIG) as [
   EntradaTipo,
@@ -36,7 +34,9 @@ export const AddEntradaCuadernoModal = ({
   const isEditing = !!entradaToEdit;
   const today = new Date().toISOString().split("T")[0];
 
-  const [tipo, setTipo] = useState<EntradaTipo>(entradaToEdit?.tipo ?? "riego");
+  const [tipo, setTipo] = useState<EntradaTipo>(
+    entradaToEdit?.tipo ?? EntradaTipo.RIEGO,
+  );
   const [fecha, setFecha] = useState(
     entradaToEdit
       ? new Date(entradaToEdit.fecha).toISOString().split("T")[0]
@@ -44,9 +44,7 @@ export const AddEntradaCuadernoModal = ({
   );
   const [datosPorTipo, setDatosPorTipo] = useState<
     Record<string, EntradaDatosDTO>
-  >(
-    entradaToEdit ? { [entradaToEdit.tipo]: entradaToEdit.datos } : {},
-  );
+  >(entradaToEdit ? { [entradaToEdit.tipo]: entradaToEdit.datos } : {});
   const [notas, setNotas] = useState(entradaToEdit?.notas ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

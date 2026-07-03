@@ -17,6 +17,7 @@ import {
 import type { ParcelaDetailProps } from "./ParcelaDetail.interface";
 import styles from "./ParcelaDetail.module.scss";
 import { ParcelaAnalisisMapa } from "./components/parcelaAnalisisMapa/ParcelaAnalisisMapa.component";
+import { ParcelaInsight } from "@/components/parcelaInsight/ParcelaInsight.component";
 
 export const ParcelaDetail = ({ id }: ParcelaDetailProps) => {
   const router = useRouter();
@@ -81,6 +82,9 @@ export const ParcelaDetail = ({ id }: ParcelaDetailProps) => {
 
       {/* Info siempre visible */}
       <ParcelaInfo parcela={parcela} />
+
+      {/* Diagnóstico IA — siempre visible, no escondido en un tab */}
+      <ParcelaInsight parcelaId={parcela._id.toString()} />
 
       {/* Tabs */}
       <div className={styles.tabs}>

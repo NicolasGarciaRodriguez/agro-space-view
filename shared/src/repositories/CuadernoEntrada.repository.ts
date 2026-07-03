@@ -4,9 +4,9 @@ import type {
   CreateEntradaDTO,
   UpdateEntradaDTO,
   CuadernoEntradaDTO,
-  EntradaTipo,
   GetEntradasResponseDTO,
 } from "../dtos/CuadernoEntrada.dto";
+import { EntradaTipo } from "../enums/EntradaTipo.enum";
 
 const BASE = `${config.API_URL}/api/cuaderno`;
 

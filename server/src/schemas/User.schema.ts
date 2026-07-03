@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 
 export interface IUser {
   email: string;
@@ -8,6 +9,7 @@ export interface IUser {
   apellidos: string;
   telefono?: string;
   role: UserRole;
+  plan: UserPlan;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,28 +25,19 @@ const UserSchema = new Schema<IUserDocument>(
       lowercase: true,
       trim: true,
     },
-    password: {
-      type: String,
-      required: true,
-    },
-    nombre: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    apellidos: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    telefono: {
-      type: String,
-      trim: true,
-    },
+    password: { type: String, required: true },
+    nombre: { type: String, required: true, trim: true },
+    apellidos: { type: String, required: true, trim: true },
+    telefono: { type: String, trim: true },
     role: {
       type: String,
       enum: Object.values(UserRole),
-      default: UserRole.AGRICULTOR,
+      default: UserRole.USUARIO,
+    },
+    plan: {
+      type: String,
+      enum: Object.values(UserPlan),
+      default: UserPlan.GRATIS,
     },
   },
   { timestamps: true, versionKey: false },

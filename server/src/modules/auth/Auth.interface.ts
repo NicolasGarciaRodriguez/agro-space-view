@@ -1,5 +1,6 @@
 import type { FastifyRequest } from "fastify";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 
 export interface LogInBody {
   email: string;
@@ -21,6 +22,7 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: UserRole;
+  plan: UserPlan;
 }
 
 export interface AuthResponse {
@@ -31,6 +33,7 @@ export interface AuthResponse {
     nombre: string;
     apellidos: string;
     role: UserRole;
+    plan: UserPlan;
   };
 }
 
