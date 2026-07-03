@@ -4602,9 +4602,9 @@ ignore@^7.0.5:
   integrity sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==
 
 immer@^11.0.0, immer@^11.1.8:
-  version "11.1.10"
-  resolved "https://registry.yarnpkg.com/immer/-/immer-11.1.10.tgz#be2d66607a551ee09fb9b3f0d7e503a5c22dda6f"
-  integrity sha512-2yokCm/ajk33mKom8Ao0th7oG3moit3mr+JRK1fLN8oBocepa3Bc6X4Su8x4KiCqvT5w5rNrS/R7NR0BUGHYIw==
+  version "11.1.11"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-11.1.11.tgz#bbf825a333ae1b16fd450d8da5f61d54de6a553d"
+  integrity sha512-qzXuyXAkPySAGYkfsAwodDPWT8Zm7/Uo5BNt4BjhMhG5WlWyZZ4wQqnWwdS8kjlQ1Cwu6gjw3A6+0gTQwlyYtw==
 
 immutable@^5.1.5:
   version "5.1.9"
@@ -6989,9 +6989,9 @@ supports-preserve-symlinks-flag@^1.0.0:
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
 systeminformation@^5.22.11:
-  version "5.31.11"
-  resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.31.11.tgz#9c637ff3e8d19a482deff70a136330e1b2399f00"
-  integrity sha512-I6O7iaUj23AXRgCPDDnvi3xHvdOLp4+1YMbF+X194lJwY1NeWojgHJPhslVKcmTtrLTguRk3QJK+xEdTiI3P0w==
+  version "5.31.12"
+  resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.31.12.tgz#6a49c9e380fe8b547fac19253505064eff160c5d"
+  integrity sha512-qnTtO5wHrKeKE/MvQ6iIt6XAV+5fgt/kPIQf27DYgjVQQuHUfWkV4Gu6k04ZpEzAMuyQ3ZsovY7Ivhp+E9JyWw==
 
 tailwind-merge@^3.0.1, tailwind-merge@^3.6.0:
   version "3.6.0"
