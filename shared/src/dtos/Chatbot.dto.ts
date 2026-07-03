@@ -1,5 +1,5 @@
-import { ChatRole } from "../enums/ChatRole.enum";
-import { ChatbotTool } from "../enums/ChatbotTool.enum";
+import { ChatRole } from "../enums/ChatRole.enum.js";
+import { ChatbotTool } from "../enums/ChatbotTool.enum.js";
 
 export interface ChatToolCallDTO {
   tool: ChatbotTool;

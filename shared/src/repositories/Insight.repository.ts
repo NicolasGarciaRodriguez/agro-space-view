@@ -1,6 +1,6 @@
-import config from "../config/index.config";
-import HttpService from "../services/Http.service";
-import type { InsightDTO } from "../dtos/Insight.dto";
+import config from "../config/index.config.js";
+import HttpService from "../services/Http.service.js";
+import type { InsightDTO } from "../dtos/Insight.dto.js";
 
 const BASE = `${config.API_URL}/api/insights`;
 

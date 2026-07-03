@@ -1,6 +1,6 @@
-import config from "../config/index.config";
-import HttpService from "../services/Http.service";
-import { SearchImagesParamsDTO } from "../dtos/Stac.dto";
+import config from "../config/index.config.js";
+import HttpService from "../services/Http.service.js";
+import { SearchImagesParamsDTO } from "../dtos/Stac.dto.js";
 
 const searchImages = async (query: SearchImagesParamsDTO) => {
   const queryParams = {

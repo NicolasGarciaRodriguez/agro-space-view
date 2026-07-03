@@ -1,11 +1,11 @@
-import config from "../config/index.config";
-import HttpService from "../services/Http.service";
+import config from "../config/index.config.js";
+import HttpService from "../services/Http.service.js";
 import type {
   ConversationDTO,
   ConversationSummaryDTO,
   CreateConversationDTO,
   SendMessageDTO,
-} from "../dtos/Chatbot.dto";
+} from "../dtos/Chatbot.dto.js";
 
 const BASE = `${config.API_URL}/api/chatbot/conversations`;
 

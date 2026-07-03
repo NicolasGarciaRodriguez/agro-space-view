@@ -1,5 +1,5 @@
-import { InsightTipo } from "../enums/InsightTipo.enum";
-import { InsightAlertaNivel } from "../enums/InsightAlertaNivel.enum";
+import { InsightTipo } from "../enums/InsightTipo.enum.js";
+import { InsightAlertaNivel } from "../enums/InsightAlertaNivel.enum.js";
 
 export interface InsightAlertaDTO {
   nivel: InsightAlertaNivel;

@@ -1,6 +1,6 @@
 // ─── Tipo de índice (compartido con el backend) ────────────────────
 
-import { IndiceTipo } from "../enums/IndiceTipo.enum";
+import { IndiceTipo } from "../enums/IndiceTipo.enum.js";
 
 export type Bbox = [number, number, number, number];
 

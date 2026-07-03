@@ -1,6 +1,10 @@
-import config from "../config/index.config";
-import HttpService from "../services/Http.service";
-import type { LoginDTO, RegisterDTO, AuthResponseDTO } from "../dtos/Auth.dto";
+import config from "../config/index.config.js";
+import HttpService from "../services/Http.service.js";
+import type {
+  LoginDTO,
+  RegisterDTO,
+  AuthResponseDTO,
+} from "../dtos/Auth.dto.js";
 
 const login = async (params: LoginDTO): Promise<AuthResponseDTO> => {
   return HttpService.post(

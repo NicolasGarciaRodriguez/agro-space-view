@@ -1,4 +1,4 @@
-import { UserPlan } from "../enums/UserPlan.enum";
+import { UserPlan } from "../enums/UserPlan.enum.js";
 
 export interface PlanLimits {
   parcelasMaximas: number | null; // null = ilimitado

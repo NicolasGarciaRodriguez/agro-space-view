@@ -1,10 +1,10 @@
-import config from "../config/index.config";
-import HttpService from "../services/Http.service";
+import config from "../config/index.config.js";
+import HttpService from "../services/Http.service.js";
 import type {
   CreateParcelaDTO,
   UpdateParcelaDTO,
   ParcelaDTO,
-} from "../dtos/Parcela.dto";
+} from "../dtos/Parcela.dto.js";
 
 const base = (explotacionId: string) =>
   `${config.API_URL}/api/explotaciones/${explotacionId}/parcelas`;

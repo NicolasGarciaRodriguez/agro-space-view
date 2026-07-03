@@ -1,11 +1,11 @@
-import config from "../config/index.config";
-import HttpService from "../services/Http.service";
+import config from "../config/index.config.js";
+import HttpService from "../services/Http.service.js";
 import type {
   CreateExplotacionDTO,
   UpdateExplotacionDTO,
   ExplotacionDTO,
   ExplotacionStatsDTO,
-} from "../dtos/Explotacion.dto";
+} from "../dtos/Explotacion.dto.js";
 
 const BASE = `${config.API_URL}/api/explotaciones`;
 

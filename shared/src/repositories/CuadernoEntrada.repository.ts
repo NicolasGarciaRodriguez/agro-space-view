@@ -1,12 +1,12 @@
-import config from "../config/index.config";
-import HttpService from "../services/Http.service";
+import config from "../config/index.config.js";
+import HttpService from "../services/Http.service.js";
 import type {
   CreateEntradaDTO,
   UpdateEntradaDTO,
   CuadernoEntradaDTO,
   GetEntradasResponseDTO,
-} from "../dtos/CuadernoEntrada.dto";
-import { EntradaTipo } from "../enums/EntradaTipo.enum";
+} from "../dtos/CuadernoEntrada.dto.js";
+import { EntradaTipo } from "../enums/EntradaTipo.enum.js";
 
 const BASE = `${config.API_URL}/api/cuaderno`;
 
