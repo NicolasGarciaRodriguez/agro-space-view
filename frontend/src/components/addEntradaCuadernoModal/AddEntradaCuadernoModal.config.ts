@@ -1,7 +1,5 @@
-import type {
-  EntradaDatosDTO,
-  EntradaTipo,
-} from "@agrospace/shared/dtos/CuadernoEntrada.dto";
+import type { EntradaDatosDTO } from "@agrospace/shared/dtos/CuadernoEntrada.dto";
+import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
 type ValidatorFn = (datos: EntradaDatosDTO) => string | null;
 
@@ -12,31 +10,31 @@ const hasValue = (v: unknown): boolean =>
   (typeof v !== "number" || !isNaN(v));
 
 export const ENTRADA_VALIDATORS: Record<EntradaTipo, ValidatorFn> = {
-  riego: (d) => {
+  [EntradaTipo.RIEGO]: (d) => {
     if (!hasValue(d.litrosPorM2)) return "Litros por m² es obligatorio";
     if (!hasValue(d.horas)) return "Las horas de riego son obligatorias";
     if (!hasValue(d.metodo)) return "El método de riego es obligatorio";
     return null;
   },
-  fertilizacion: (d) => {
+  [EntradaTipo.FERTILIZACION]: (d) => {
     if (!hasValue(d.producto)) return "El producto es obligatorio";
     if (!hasValue(d.dosis)) return "La dosis es obligatoria";
     if (!hasValue(d.unidad)) return "La unidad es obligatoria";
     return null;
   },
-  tratamiento: (d) => {
+  [EntradaTipo.TRATAMIENTO]: (d) => {
     if (!hasValue(d.producto)) return "El producto es obligatorio";
     if (!hasValue(d.motivoTratamiento)) return "El motivo es obligatorio";
     if (!hasValue(d.plaga)) return "La plaga o enfermedad es obligatoria";
     return null;
   },
-  cosecha: (d) => {
+  [EntradaTipo.COSECHA]: (d) => {
     if (!hasValue(d.kg)) return "Los kilogramos son obligatorios";
     if (!hasValue(d.calidad)) return "La calidad es obligatoria";
     if (!hasValue(d.destino)) return "El destino es obligatorio";
     return null;
   },
-  observacion: (d) => {
+  [EntradaTipo.OBSERVACION]: (d) => {
     if (!hasValue(d.texto)) return "El texto de la observación es obligatorio";
     return null;
   },
