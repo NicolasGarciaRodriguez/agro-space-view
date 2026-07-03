@@ -64,10 +64,8 @@
     "dev": "tsc --watch",
     "clean": "rimraf dist"
   },
-  "dependencies": {
-    "@types/node": "^22.15.21"
-  },
   "devDependencies": {
+    "@types/node": "^20",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3"
   }
