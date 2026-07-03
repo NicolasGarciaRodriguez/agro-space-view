@@ -1,7 +1,6 @@
 import type { FastifyReply } from "fastify";
 import { InsightsService } from "./Insights.service.js";
 import {
-  InsightGenerationError,
   type GetInsightParcelaRequest,
   type GetInsightExplotacionRequest,
 } from "./Insights.interface.js";

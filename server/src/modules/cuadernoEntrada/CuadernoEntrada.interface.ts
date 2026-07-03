@@ -1,9 +1,6 @@
 import type { FastifyRequest } from "fastify";
-import type {
-  EntradaTipo,
-  IEntradaDatos,
-} from "../../schemas/CuadernoEntrada.schema.js";
-
+import type { IEntradaDatos } from "../../schemas/CuadernoEntrada.schema.js";
+import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
 export interface CreateEntradaBody {
   parcelaId: string;
@@ -20,7 +17,6 @@ export interface UpdateEntradaBody {
   notas?: string;
 }
 
-
 export interface GetEntradasQuery {
   parcelaId?: string;
   explotacionId?: string;
@@ -29,11 +25,9 @@ export interface GetEntradasQuery {
   page?: number;
 }
 
-
 export interface EntradaParams {
   id: string;
 }
-
 
 export type CreateEntradaRequest = FastifyRequest<{
   Body: CreateEntradaBody;
@@ -51,7 +45,6 @@ export type UpdateEntradaRequest = FastifyRequest<{
 export type DeleteEntradaRequest = FastifyRequest<{
   Params: EntradaParams;
 }>;
-
 
 export class EntradaNotFoundError extends Error {
   constructor() {
