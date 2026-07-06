@@ -13,7 +13,13 @@ const toGeoJSONCollection = (
   type: "FeatureCollection",
   features: parcelas.map((p) => ({
     type: "Feature",
-    properties: { id: p._id, nombre: p.nombre, cultivo: p.cultivo },
+    properties: {
+      id: p._id,
+      nombre: p.nombre,
+      tipoCultivo: p.tipoCultivo,
+      variedad: p.variedad,
+      manejo: p.manejo,
+    },
     geometry: { type: "Polygon", coordinates: [p.polygon] },
   })),
 });
