@@ -1,0 +1,15 @@
+export enum TipoCultivo {
+  OLIVAR = "olivar",
+  VINEDO = "vinedo",
+  CEREALES = "cereales",
+  FRUTALES_HUESO = "frutales_hueso",
+  FRUTALES_PEPITA = "frutales_pepita",
+  CITRICOS = "citricos",
+  FRUTOS_SECOS = "frutos_secos",
+  HORTALIZAS = "hortalizas",
+  LEGUMINOSAS = "leguminosas",
+  FORRAJERAS = "forrajeras",
+  VIVERO = "vivero",
+  BARBECHO = "barbecho",
+  OTRO = "otro",
+}

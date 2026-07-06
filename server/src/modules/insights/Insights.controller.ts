@@ -16,7 +16,11 @@ const getByParcela = async (
   const insight = await InsightsService.getLatestParcelaInsight(parcelaId);
 
   if (!insight) {
-    return reply.status(404).send({ error: "Sin insight disponible todavía" });
+    const faltantes = await InsightsService.getMissingIndices(parcelaId);
+    return reply.status(404).send({
+      error: "Sin insight disponible todavía",
+      faltantes, // ej: ["ndwi", "ndre"]
+    });
   }
 
   return reply.send(insight);

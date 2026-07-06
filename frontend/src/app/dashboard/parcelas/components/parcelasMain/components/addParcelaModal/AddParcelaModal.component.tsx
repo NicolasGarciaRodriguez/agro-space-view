@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { ParcelaRepository } from "@agrospace/shared/repositories/Parcela.repository";
-import { Input } from "@/components/input/Input.component";
+import { ParcelaForm } from "@/components/parcelaForm/ParcelaForm.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
+import type { ParcelaFormValues } from "@/components/parcelaForm/ParcelaForm.interface";
 import type { AddParcelaModalProps } from "./AddParcelaModal.interface";
 import styles from "./AddParcelaModal.module.scss";
 
@@ -13,11 +14,6 @@ export const AddParcelaModal = ({
   onCreated,
   onClose,
 }: AddParcelaModalProps) => {
-  const [form, setForm] = useState({
-    refCatastral: "",
-    nombre: "",
-    cultivo: "",
-  });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,20 +32,17 @@ export const AddParcelaModal = ({
     };
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: ParcelaFormValues) => {
     setError(null);
     setIsLoading(true);
 
     try {
       await ParcelaRepository.create(explotacionId, {
-        refCatastral: form.refCatastral.trim(),
-        nombre: form.nombre.trim(),
-        cultivo: form.cultivo.trim() || undefined,
+        refCatastral: values.refCatastral.trim(),
+        nombre: values.nombre.trim(),
+        tipoCultivo: (values.tipoCultivo || undefined) as never,
+        variedad: values.variedad.trim() || undefined,
+        manejo: values.manejo as never,
       });
       onCreated();
     } catch (err) {
@@ -62,9 +55,6 @@ export const AddParcelaModal = ({
       setIsLoading(false);
     }
   };
-
-  const canSubmit =
-    form.refCatastral.trim().length >= 14 && form.nombre.trim().length > 0;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -88,64 +78,21 @@ export const AddParcelaModal = ({
           </button>
         </header>
 
-        <form className={styles.modal__form} onSubmit={handleSubmit} noValidate>
-          <Input
-            id="refCatastral"
-            name="refCatastral"
-            type="text"
-            label="Referencia catastral"
-            placeholder="53006A09100025"
-            value={form.refCatastral}
-            onChange={handleChange}
+        <ParcelaForm
+          isLoading={isLoading}
+          error={error}
+          onSubmit={handleSubmit}
+          submitLabel="Añadir parcela"
+        >
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
             disabled={isLoading}
-            maxLength={20}
-            hint="Encuéntrala en la Sede Electrónica del Catastro"
-            required
-          />
-
-          <Input
-            id="nombre"
-            name="nombre"
-            type="text"
-            label="Nombre de la parcela"
-            placeholder="Sector norte"
-            value={form.nombre}
-            onChange={handleChange}
-            disabled={isLoading}
-            required
-          />
-
-          <Input
-            id="cultivo"
-            name="cultivo"
-            type="text"
-            label="Cultivo (opcional)"
-            placeholder="Naranjos, Olivos, Cereales..."
-            value={form.cultivo}
-            onChange={handleChange}
-            disabled={isLoading}
-          />
-
-          {error && (
-            <p className={styles.modal__error} role="alert">
-              {error}
-            </p>
-          )}
-
-          <div className={styles.modal__actions}>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" loading={isLoading} disabled={!canSubmit}>
-              Añadir parcela
-            </Button>
-          </div>
-        </form>
+          >
+            Cancelar
+          </Button>
+        </ParcelaForm>
       </div>
     </div>
   );

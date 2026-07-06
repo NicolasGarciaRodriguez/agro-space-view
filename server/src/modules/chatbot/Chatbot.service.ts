@@ -19,14 +19,12 @@ import {
 } from "./Chatbot.config.js";
 import { ConversationNotFoundError } from "./Chatbot.interface.js";
 import type { AnthropicMessage } from "../../services/Anthropic.service.js";
+import { TIPO_CULTIVO_LABELS } from "@agrospace/shared/config/TipoCultivoLabels.config";
+import { MANEJO_CULTIVO_LABELS } from "@agrospace/shared/config/ManejoCultivoLabels.config";
 
 type LeanConversation = FlattenMaps<IConversationDocument> & {
   _id: mongoose.Types.ObjectId;
 };
-
-// ═══════════════════════════════════════════════════════════════════
-//  CONTEXTO LIGERO — resumen barato de la explotación
-// ═══════════════════════════════════════════════════════════════════
 
 const buildExplotacionSummary = async (
   userId: string,
@@ -77,7 +75,11 @@ const buildExplotacionSummary = async (
         ? " ← EL USUARIO ESTÁ VIENDO ESTA PARCELA AHORA MISMO"
         : "";
 
-      return `- ${p.nombre} (id: ${p._id}, ${p.superficie} m²): ${indicesText}${marcador}`;
+      const cultivoInfo = p.tipoCultivo
+        ? `${TIPO_CULTIVO_LABELS[p.tipoCultivo]}${p.variedad ? ` (${p.variedad})` : ""}, ${MANEJO_CULTIVO_LABELS[p.manejo]}`
+        : MANEJO_CULTIVO_LABELS[p.manejo];
+
+      return `- ${p.nombre} [${cultivoInfo}] (id: ${p._id}, ${p.superficie} m²): ${indicesText}${marcador}`;
     })
     .join("\n");
 

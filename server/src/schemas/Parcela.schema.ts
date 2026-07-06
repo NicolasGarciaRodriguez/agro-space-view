@@ -1,4 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { TipoCultivo } from "@agrospace/shared/enums/TipoCultivo.enum";
+import { ManejoCultivo } from "@agrospace/shared/enums/ManejoCultivo.enum";
 
 export type LonLat = [number, number];
 
@@ -7,7 +9,9 @@ export interface IParcela {
   explotacionId: mongoose.Types.ObjectId;
   nombre: string;
   refCatastral: string;
-  cultivo?: string;
+  tipoCultivo?: TipoCultivo;
+  variedad?: string;
+  manejo: ManejoCultivo;
   provincia: string;
   municipio: string;
   superficie: number;
@@ -45,9 +49,18 @@ const ParcelaSchema = new Schema<IParcelaDocument>(
       required: true,
       trim: true,
     },
-    cultivo: {
+    tipoCultivo: {
+      type: String,
+      enum: Object.values(TipoCultivo),
+    },
+    variedad: {
       type: String,
       trim: true,
+    },
+    manejo: {
+      type: String,
+      enum: Object.values(ManejoCultivo),
+      default: ManejoCultivo.CONVENCIONAL,
     },
     provincia: {
       type: String,

@@ -1,16 +1,21 @@
 import { getBaseUrl } from "../services/Http.service.js";
 import HttpService from "../services/Http.service.js";
-import type { InsightDTO } from "../dtos/Insight.dto.js";
+import type { InsightDTO, InsightOrMissingDTO } from "../dtos/Insight.dto.js";
+import { IndiceTipo } from "../enums/IndiceTipo.enum.js";
 
 const BASE = () => `${getBaseUrl()}/api/insights`;
 
-const getByParcela = async (parcelaId: string): Promise<InsightDTO | null> => {
+const getByParcela = async (
+  parcelaId: string,
+): Promise<InsightOrMissingDTO> => {
   try {
-    return (await HttpService.get(
+    const insight = (await HttpService.get(
       `${BASE()}/parcela/${parcelaId}`,
     )) as InsightDTO;
-  } catch {
-    return null; // 404 = sin insight todavía, no es un error real
+    return { insight, faltantes: null };
+  } catch (err) {
+    const faltantes = (err as { faltantes?: IndiceTipo[] })?.faltantes ?? [];
+    return { insight: null, faltantes };
   }
 };
 

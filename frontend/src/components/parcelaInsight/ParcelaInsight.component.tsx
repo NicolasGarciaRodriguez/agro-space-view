@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { InsightRepository } from "@agrospace/shared/repositories/Insight.repository";
 import { InsightAlertaNivel } from "@agrospace/shared/enums/InsightAlertaNivel.enum";
+import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import type { InsightDTO } from "@agrospace/shared/dtos/Insight.dto";
 import type { ParcelaInsightProps } from "./ParcelaInsight.interface";
 import styles from "./ParcelaInsight.module.scss";
@@ -16,6 +17,12 @@ const ALERTA_CONFIG: Record<
   [InsightAlertaNivel.URGENTE]: { icon: "🔴", modifier: "urgente" },
 };
 
+const INDICE_LABELS: Record<IndiceTipo, string> = {
+  [IndiceTipo.NDVI]: "NDVI",
+  [IndiceTipo.NDWI]: "NDWI",
+  [IndiceTipo.NDRE]: "NDRE",
+};
+
 const formatDate = (isoDate: string): string =>
   new Date(isoDate).toLocaleDateString("es-ES", {
     day: "2-digit",
@@ -26,12 +33,16 @@ const formatDate = (isoDate: string): string =>
 
 export const ParcelaInsight = ({ parcelaId }: ParcelaInsightProps) => {
   const [insight, setInsight] = useState<InsightDTO | null>(null);
+  const [faltantes, setFaltantes] = useState<IndiceTipo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setIsLoading(true);
     InsightRepository.getByParcela(parcelaId)
-      .then(setInsight)
+      .then((result) => {
+        setInsight(result.insight);
+        setFaltantes(result.faltantes ?? []);
+      })
       .finally(() => setIsLoading(false));
   }, [parcelaId]);
 
@@ -53,8 +64,9 @@ export const ParcelaInsight = ({ parcelaId }: ParcelaInsightProps) => {
           <span className={styles.insight__title}>Diagnóstico IA</span>
         </div>
         <p className={styles.insight__empty}>
-          Aún no hay suficientes datos para generar un diagnóstico. Realiza un
-          análisis satelital para empezar.
+          {faltantes.length > 0
+            ? `Analiza también ${faltantes.map((f) => INDICE_LABELS[f]).join(" y ")} para desbloquear el diagnóstico completo de esta parcela.`
+            : "Aún no hay suficientes datos para generar un diagnóstico. Realiza un análisis satelital para empezar."}
         </p>
       </div>
     );

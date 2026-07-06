@@ -24,7 +24,7 @@ export interface AnalysisResult {
 // ═══════════════════════════════════════════════════════════════════
 
 const analyse = async (params: AnalyseParamsDTO): Promise<AnalysisResult> => {
-  const res = await HttpService.postBlob(`${BASE}/process`, params);
+  const res = await HttpService.postBlob(`${BASE()}/process`, params);
 
   const metadata: AnalysisMetadataDTO = {
     tipo: params.tipo,
@@ -52,7 +52,7 @@ const analyse = async (params: AnalyseParamsDTO): Promise<AnalysisResult> => {
 const getTimeSeries = async (
   params: GetTimeSeriesDTO,
 ): Promise<TimeSeriesResponseDTO> => {
-  return HttpService.get(`${BASE}/timeseries`, {
+  return HttpService.get(`${BASE()}/timeseries`, {
     tipo: params.tipo,
     bbox: params.bbox.join(","),
     dateFrom: params.dateFrom,
@@ -62,7 +62,7 @@ const getTimeSeries = async (
 };
 
 const getIndices = async (): Promise<IndiceDefinitionDTO[]> => {
-  return HttpService.get(`${BASE}/indices`) as Promise<IndiceDefinitionDTO[]>;
+  return HttpService.get(`${BASE()}/indices`) as Promise<IndiceDefinitionDTO[]>;
 };
 
 // ═══════════════════════════════════════════════════════════════════

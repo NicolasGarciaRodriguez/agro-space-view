@@ -1,17 +1,21 @@
 import type { FastifyRequest } from "fastify";
-
+import { TipoCultivo } from "@agrospace/shared/enums/TipoCultivo.enum";
+import { ManejoCultivo } from "@agrospace/shared/enums/ManejoCultivo.enum";
 
 export interface CreateParcelaBody {
   nombre: string;
   refCatastral: string;
-  cultivo?: string;
+  tipoCultivo?: TipoCultivo;
+  variedad?: string;
+  manejo?: ManejoCultivo;
 }
 
 export interface UpdateParcelaBody {
   nombre?: string;
-  cultivo?: string;
+  tipoCultivo?: TipoCultivo;
+  variedad?: string;
+  manejo?: ManejoCultivo;
 }
-
 
 export interface ParcelaParams {
   explotacionId: string;
@@ -21,7 +25,6 @@ export interface ParcelaParams {
 export interface ExplotacionOnlyParams {
   explotacionId: string;
 }
-
 
 export type CreateParcelaRequest = FastifyRequest<{
   Params: ExplotacionOnlyParams;
@@ -44,7 +47,6 @@ export type UpdateParcelaRequest = FastifyRequest<{
 export type DeleteParcelaRequest = FastifyRequest<{
   Params: ParcelaParams;
 }>;
-
 
 export class ParcelaNotFoundError extends Error {
   constructor() {

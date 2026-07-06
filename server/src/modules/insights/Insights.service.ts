@@ -22,6 +22,9 @@ import {
   type AnthropicInsightResponse,
 } from "./Insights.interface.js";
 import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
+import { TIPO_CULTIVO_LABELS } from "@agrospace/shared/config/TipoCultivoLabels.config";
+import { MANEJO_CULTIVO_LABELS } from "@agrospace/shared/config/ManejoCultivoLabels.config";
+import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 
 type LeanInsight = FlattenMaps<IInsightDocument> & {
   _id: mongoose.Types.ObjectId;
@@ -68,9 +71,6 @@ const buildParcelaContext = async (
 }> => {
   const parcela = await ParcelaModel.findById(parcelaId).lean();
 
-  // Últimos N análisis de CADA tipo (no solo los N más recientes en
-  // global, porque si NDVI se analiza más a menudo, NDWI y NDRE
-  // podrían quedar fuera).
   const analisis = await AnalisisModel.aggregate([
     { $match: { parcelaId } },
     { $sort: { createdAt: -1 } },
@@ -115,7 +115,14 @@ const buildParcelaContext = async (
         .join("\n")
     : "No hay entradas de cuaderno registradas todavía.";
 
+  // Línea de cultivo: solo se añade si hay tipoCultivo — evita un
+  // "Cultivo: sin especificar" ruidoso en el prompt cuando no aplica.
+  const cultivoText = parcela?.tipoCultivo
+    ? `Cultivo: ${TIPO_CULTIVO_LABELS[parcela.tipoCultivo]}${parcela.variedad ? ` (variedad ${parcela.variedad})` : ""} — Manejo: ${MANEJO_CULTIVO_LABELS[parcela.manejo]}`
+    : `Manejo: ${MANEJO_CULTIVO_LABELS[parcela?.manejo ?? "convencional"]}`;
+
   const prompt = `Parcela: ${parcela?.nombre ?? "Sin nombre"} (${parcela?.superficie ?? "?"} m²)
+${cultivoText}
 
 ANÁLISIS SATELITALES RECIENTES:
 ${analisisText}
@@ -170,21 +177,44 @@ const generateParcelaInsight = async (
 
 const generatingLocks = new Set<string>();
 
+const hasAllIndicesAnalyzed = async (
+  parcelaId: mongoose.Types.ObjectId,
+): Promise<boolean> => {
+  const tiposPresentes = await AnalisisModel.distinct("tipo", { parcelaId });
+  const tiposRequeridos = Object.values(IndiceTipo);
+
+  return tiposRequeridos.every((tipo) => tiposPresentes.includes(tipo));
+};
+
+const getMissingIndices = async (parcelaId: string): Promise<IndiceTipo[]> => {
+  const tiposPresentes = await AnalisisModel.distinct("tipo", {
+    parcelaId: new mongoose.Types.ObjectId(parcelaId),
+  });
+  return Object.values(IndiceTipo).filter(
+    (tipo) => !tiposPresentes.includes(tipo),
+  );
+};
+
 const maybeGenerateParcelaInsight = async (
   userId: string,
   explotacionId: string,
   parcelaId: string,
 ): Promise<void> => {
   if (generatingLocks.has(parcelaId)) {
-    return; // ya hay una generación en curso para esta parcela
+    return;
   }
 
   generatingLocks.add(parcelaId);
 
   try {
     const parcelaObjectId = new mongoose.Types.ObjectId(parcelaId);
-    const shouldGenerate = await hasNewDataSinceLastInsight(parcelaObjectId);
 
+    // No generar insight hasta tener los 3 índices analizados al
+    // menos una vez — evita insights parciales y llamadas de sobra.
+    const allIndices = await hasAllIndicesAnalyzed(parcelaObjectId);
+    if (!allIndices) return;
+
+    const shouldGenerate = await hasNewDataSinceLastInsight(parcelaObjectId);
     if (!shouldGenerate) return;
 
     const canGenerate = await UsageLimitsService.canGenerateInsight(userId);
@@ -324,4 +354,5 @@ export const InsightsService = {
   maybeGenerateParcelaInsight,
   getLatestParcelaInsight,
   generateExplotacionInsight,
+  getMissingIndices,
 };

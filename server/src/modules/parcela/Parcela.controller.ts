@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
 import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
 import { CatastroService } from "../catastro/Catastro.service.js";
+import { ManejoCultivo } from "@agrospace/shared/enums/ManejoCultivo.enum";
 import {
   ParcelaNotFoundError,
   ParcelaForbiddenError,
@@ -58,7 +59,7 @@ const getById = async (request: GetParcelaRequest, reply: FastifyReply) => {
 const create = async (request: CreateParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId } = request.params;
-  const { nombre, refCatastral, cultivo } = request.body;
+  const { nombre, refCatastral, tipoCultivo, variedad, manejo } = request.body;
 
   const explotacion = await verifyExplotacion(explotacionId, userId);
 
@@ -76,7 +77,9 @@ const create = async (request: CreateParcelaRequest, reply: FastifyReply) => {
     explotacionId,
     nombre,
     refCatastral: catastro.ref,
-    cultivo,
+    tipoCultivo,
+    variedad,
+    manejo: manejo ?? ManejoCultivo.CONVENCIONAL,
     provincia: explotacion.provincia,
     municipio: explotacion.municipio,
     superficie: catastro.area,

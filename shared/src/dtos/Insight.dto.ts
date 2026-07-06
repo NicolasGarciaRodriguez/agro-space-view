@@ -1,5 +1,6 @@
 import { InsightTipo } from "../enums/InsightTipo.enum.js";
 import { InsightAlertaNivel } from "../enums/InsightAlertaNivel.enum.js";
+import { IndiceTipo } from "../enums/IndiceTipo.enum.js";
 
 export interface InsightAlertaDTO {
   nivel: InsightAlertaNivel;
@@ -22,3 +23,12 @@ export interface InsightDTO {
   contenido: InsightContenidoDTO;
   createdAt: string;
 }
+
+export interface InsightNotAvailableDTO {
+  error: string;
+  faltantes: IndiceTipo[];
+}
+
+export type InsightOrMissingDTO =
+  | { insight: InsightDTO; faltantes: null }
+  | { insight: null; faltantes: IndiceTipo[] };

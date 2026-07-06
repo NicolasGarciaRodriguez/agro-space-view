@@ -191,14 +191,15 @@ const __handleResponse = async (response: Response): Promise<unknown> => {
     let errorMsg = "Unknown error occurred";
     let errorCode;
     let errorIsKO;
+    let errorBody: Record<string, unknown> = {};
 
     try {
-      const errorBody = await response.json();
+      errorBody = await response.json();
 
       if (errorBody.error) {
-        errorMsg = errorBody.error;
+        errorMsg = errorBody.error as string;
       } else if (errorBody.message) {
-        errorMsg = errorBody.message;
+        errorMsg = errorBody.message as string;
       }
 
       if (errorBody.code) {
@@ -213,6 +214,7 @@ const __handleResponse = async (response: Response): Promise<unknown> => {
     }
 
     return Promise.reject({
+      ...errorBody, // ← propaga cualquier campo extra (como "faltantes")
       status: response.status,
       message: errorMsg,
       code: errorCode,
