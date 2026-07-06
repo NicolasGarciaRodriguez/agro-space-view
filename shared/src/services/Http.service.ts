@@ -1,10 +1,17 @@
 const TIMEOUT = 30000;
 
 let tokenGetter: (() => string | null) | null = null;
+let baseUrl = "";
 
 export const setTokenGetter = (getter: () => string | null) => {
   tokenGetter = getter;
 };
+
+export const setBaseUrl = (url: string) => {
+  baseUrl = url.replace(/\/$/, ""); // sin barra final, coherente con el resto
+};
+
+export const getBaseUrl = (): string => baseUrl;
 
 const get = async (
   url: string,

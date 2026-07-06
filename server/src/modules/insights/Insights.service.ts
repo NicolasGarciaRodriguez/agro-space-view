@@ -168,11 +168,19 @@ const generateParcelaInsight = async (
   return insight;
 };
 
+const generatingLocks = new Set<string>();
+
 const maybeGenerateParcelaInsight = async (
   userId: string,
   explotacionId: string,
   parcelaId: string,
 ): Promise<void> => {
+  if (generatingLocks.has(parcelaId)) {
+    return; // ya hay una generación en curso para esta parcela
+  }
+
+  generatingLocks.add(parcelaId);
+
   try {
     const parcelaObjectId = new mongoose.Types.ObjectId(parcelaId);
     const shouldGenerate = await hasNewDataSinceLastInsight(parcelaObjectId);
@@ -180,11 +188,13 @@ const maybeGenerateParcelaInsight = async (
     if (!shouldGenerate) return;
 
     const canGenerate = await UsageLimitsService.canGenerateInsight(userId);
-    if (!canGenerate) return; // límite del plan alcanzado, no genera, no avisa
+    if (!canGenerate) return;
 
     await generateParcelaInsight(userId, explotacionId, parcelaId);
   } catch (error) {
     console.error("Error generando insight de parcela (no bloqueante):", error);
+  } finally {
+    generatingLocks.delete(parcelaId);
   }
 };
 

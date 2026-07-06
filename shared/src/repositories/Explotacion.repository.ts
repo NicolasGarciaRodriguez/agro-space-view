@@ -1,4 +1,4 @@
-import config from "../config/index.config.js";
+import { getBaseUrl } from "../services/Http.service.js";
 import HttpService from "../services/Http.service.js";
 import type {
   CreateExplotacionDTO,
@@ -7,33 +7,35 @@ import type {
   ExplotacionStatsDTO,
 } from "../dtos/Explotacion.dto.js";
 
-const BASE = `${config.API_URL}/api/explotaciones`;
+const BASE = () => `${getBaseUrl()}/api/explotaciones`;
 
 const getAll = async (): Promise<ExplotacionDTO[]> => {
-  return HttpService.get(BASE) as Promise<ExplotacionDTO[]>;
+  return HttpService.get(BASE()) as Promise<ExplotacionDTO[]>;
 };
 
 const getById = async (id: string): Promise<ExplotacionDTO> => {
-  return HttpService.get(`${BASE}/${id}`) as Promise<ExplotacionDTO>;
+  return HttpService.get(`${BASE()}/${id}`) as Promise<ExplotacionDTO>;
 };
 
 const create = async (data: CreateExplotacionDTO): Promise<ExplotacionDTO> => {
-  return HttpService.post(BASE, data) as Promise<ExplotacionDTO>;
+  return HttpService.post(BASE(), data) as Promise<ExplotacionDTO>;
 };
 
 const update = async (
   id: string,
   data: UpdateExplotacionDTO,
 ): Promise<ExplotacionDTO> => {
-  return HttpService.patch(`${BASE}/${id}`, data) as Promise<ExplotacionDTO>;
+  return HttpService.patch(`${BASE()}/${id}`, data) as Promise<ExplotacionDTO>;
 };
 
 const remove = async (id: string): Promise<void> => {
-  await HttpService.delete(`${BASE}/${id}`);
+  await HttpService.delete(`${BASE()}/${id}`);
 };
 
 const getStats = async (id: string): Promise<ExplotacionStatsDTO> => {
-  return HttpService.get(`${BASE}/${id}/stats`) as Promise<ExplotacionStatsDTO>;
+  return HttpService.get(
+    `${BASE()}/${id}/stats`,
+  ) as Promise<ExplotacionStatsDTO>;
 };
 
 export const ExplotacionRepository = {

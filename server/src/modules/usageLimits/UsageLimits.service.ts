@@ -6,10 +6,10 @@ import { UserModel } from "../../schemas/User.schema.js";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 import { InsightTipo } from "@agrospace/shared/enums/InsightTipo.enum";
 import { ChatRole } from "@agrospace/shared/enums/ChatRole.enum";
-import { PLAN_LIMITS } from "@agrospace/shared/config/PlanLimits.config";
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import { UsageLimitExceededError } from "./UsageLimits.interface.js";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
+import { PLAN_LIMITS } from "@agrospace/shared/config/PlanLimits.config";
 
 // Inicio del mes en curso (para límites mensuales)
 const startOfMonth = (): Date => {

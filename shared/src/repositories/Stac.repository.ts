@@ -1,6 +1,8 @@
-import config from "../config/index.config.js";
+import { getBaseUrl } from "../services/Http.service.js";
 import HttpService from "../services/Http.service.js";
 import { SearchImagesParamsDTO } from "../dtos/Stac.dto.js";
+
+const BASE = () => `${getBaseUrl()}/api/stac/images`;
 
 const searchImages = async (query: SearchImagesParamsDTO) => {
   const queryParams = {
@@ -10,7 +12,7 @@ const searchImages = async (query: SearchImagesParamsDTO) => {
     maxCloud: query.maxCloud,
     limit: query.limit,
   };
-  return HttpService.get(`${config.API_URL}/api/stac/images`, queryParams);
+  return HttpService.get(`${BASE()}`, queryParams);
 };
 
 export const StacRepository = {

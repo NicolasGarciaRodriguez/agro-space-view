@@ -1,4 +1,4 @@
-import config from "../config/index.config.js";
+import { getBaseUrl } from "../services/Http.service.js";
 import HttpService from "../services/Http.service.js";
 import type {
   AnalyseParamsDTO,
@@ -11,7 +11,7 @@ import type {
 } from "../dtos/Analisis.dto.js";
 import { IndiceTipo } from "../enums/IndiceTipo.enum.js";
 
-const BASE = `${config.API_URL}/api/analisis`;
+const BASE = () => `${getBaseUrl()}/api/analisis`;
 
 export interface AnalysisResult {
   imageUrl: string;
@@ -70,7 +70,7 @@ const getIndices = async (): Promise<IndiceDefinitionDTO[]> => {
 // ═══════════════════════════════════════════════════════════════════
 
 const create = async (data: CreateAnalisisDTO): Promise<AnalisisDTO> => {
-  return HttpService.post(BASE, data) as Promise<AnalisisDTO>;
+  return HttpService.post(BASE(), data) as Promise<AnalisisDTO>;
 };
 
 const getByParcela = async (
@@ -78,7 +78,7 @@ const getByParcela = async (
   tipo?: IndiceTipo,
   limit?: number,
 ): Promise<AnalisisDTO[]> => {
-  return HttpService.get(BASE, {
+  return HttpService.get(BASE(), {
     parcelaId,
     tipo,
     limit,
@@ -86,7 +86,7 @@ const getByParcela = async (
 };
 
 const remove = async (id: string): Promise<void> => {
-  await HttpService.delete(`${BASE}/${id}`);
+  await HttpService.delete(`${BASE()}/${id}`);
 };
 
 export const AnalisisRepository = {

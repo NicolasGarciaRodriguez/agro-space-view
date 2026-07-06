@@ -27,6 +27,12 @@ export async function buildApp() {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    exposedHeaders: [
+      "X-Analisis-Tipo",
+      "X-Analisis-Image-Id",
+      "X-Analisis-Image-Date",
+      "X-Analisis-Cloud-Cover",
+    ],
   });
 
   await app.register(jwt, {
