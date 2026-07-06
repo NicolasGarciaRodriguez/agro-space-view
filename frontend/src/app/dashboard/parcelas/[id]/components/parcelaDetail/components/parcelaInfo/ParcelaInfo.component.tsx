@@ -22,8 +22,14 @@ export const ParcelaInfo = ({ parcela }: ParcelaInfoProps) => {
             <p className={styles.info__description}>{parcela.description}</p>
           )}
         </div>
-        {parcela.cultivo && (
-          <span className={styles.info__cultivo}>{parcela.cultivo}</span>
+        {parcela.tipoCultivo && (
+          <span className={styles.info__cultivo}>{parcela.tipoCultivo}</span>
+        )}
+        {parcela.variedad && (
+          <span className={styles.info__variedad}>{parcela.variedad}</span>
+        )}
+        {parcela.manejo && (
+          <span className={styles.info__manejo}>{parcela.manejo}</span>
         )}
       </div>
 
