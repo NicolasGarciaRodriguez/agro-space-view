@@ -1,4 +1,4 @@
-import { TipoCultivo } from "../enums/TipoCultivo.enum";
+import { TipoCultivo } from "../enums/TipoCultivo.enum.js";
 
 export const TIPO_CULTIVO_LABELS: Record<TipoCultivo, string> = {
   [TipoCultivo.OLIVAR]: "Olivar",
