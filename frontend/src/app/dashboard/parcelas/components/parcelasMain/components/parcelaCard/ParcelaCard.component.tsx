@@ -42,8 +42,14 @@ export const ParcelaCard = ({
       <div className={styles.card__body}>
         <h3 className={styles.card__name}>{parcela.nombre}</h3>
 
-        {parcela.cultivo && (
-          <span className={styles.card__cultivo}>{parcela.cultivo}</span>
+        {parcela.tipoCultivo && (
+          <span className={styles.card__cultivo}>{parcela.tipoCultivo}</span>
+        )}
+        {parcela.variedad && (
+          <span className={styles.card__variedad}>{parcela.variedad}</span>
+        )}
+        {parcela.manejo && (
+          <span className={styles.card__manejo}>{parcela.manejo}</span>
         )}
 
         <div className={styles.card__meta}>
