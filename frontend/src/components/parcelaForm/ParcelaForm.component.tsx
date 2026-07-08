@@ -130,11 +130,12 @@ export const ParcelaForm = ({
         </p>
       )}
 
-      <Button type="submit" loading={isLoading} disabled={!canSubmit}>
-        {submitLabel}
-      </Button>
-
-      {children}
+      <div className={styles.form__submitArea}>
+        <Button type="submit" loading={isLoading} disabled={!canSubmit}>
+          {submitLabel}
+        </Button>
+        {children}
+      </div>
     </form>
   );
 };

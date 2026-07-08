@@ -22,6 +22,8 @@ import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
 import { DEFAULT_DATE_RANGE } from "./ParcelaAnalisisMapa.config";
 import styles from "./ParcelaAnalisisMapa.module.scss";
+import { INDICE_ICONS } from "@agrospace/shared/config/IndiceVisuals.config";
+import { IndiceTipoSelector } from "@/components/indiceTipoSelector/IndiceTipoSelector.component";
 
 const AnalisisMap = dynamic(
   () =>
@@ -270,25 +272,12 @@ export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
         <h2 className={styles.analisis__title}>Análisis satelital</h2>
 
         {indices.length > 0 && (
-          <div className={styles.analisis__tipoSelector}>
-            {indices.map((indice) => (
-              <button
-                key={indice.tipo}
-                className={[
-                  styles.analisis__tipoBtn,
-                  tipoActivo === indice.tipo
-                    ? styles["analisis__tipoBtn--active"]
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => handleChangeTipo(indice.tipo)}
-                disabled={isLoading}
-              >
-                {indice.label}
-              </button>
-            ))}
-          </div>
+            <IndiceTipoSelector
+              indices={indices}
+              tipoActivo={tipoActivo}
+              onChange={handleChangeTipo}
+              disabled={isLoading}
+            />
         )}
       </div>
 

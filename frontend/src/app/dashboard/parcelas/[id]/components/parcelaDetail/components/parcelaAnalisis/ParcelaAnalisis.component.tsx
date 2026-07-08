@@ -11,6 +11,8 @@ import type {
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import type { ParcelaAnalisisProps } from "./ParcelaAnalisis.interface";
 import styles from "./ParcelaAnalisis.module.scss";
+import { INDICE_ICONS } from "@agrospace/shared/config/IndiceVisuals.config";
+import { IndiceTipoSelector } from "@/components/indiceTipoSelector/IndiceTipoSelector.component";
 
 const formatDate = (date: string): string =>
   new Date(date).toLocaleDateString("es-ES", {
@@ -88,24 +90,11 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
         <h2 className={styles.analisis__title}>Historial de análisis</h2>
 
         {indices.length > 0 && (
-          <div className={styles.analisis__tipoSelector}>
-            {indices.map((indice) => (
-              <button
-                key={indice.tipo}
-                className={[
-                  styles.analisis__tipoBtn,
-                  tipoActivo === indice.tipo
-                    ? styles["analisis__tipoBtn--active"]
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => setTipoActivo(indice.tipo)}
-              >
-                {indice.label}
-              </button>
-            ))}
-          </div>
+            <IndiceTipoSelector
+              indices={indices}
+              tipoActivo={tipoActivo}
+              onChange={setTipoActivo}
+            />
         )}
       </div>
 

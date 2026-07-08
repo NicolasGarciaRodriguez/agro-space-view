@@ -78,21 +78,23 @@ export const AddParcelaModal = ({
           </button>
         </header>
 
-        <ParcelaForm
-          isLoading={isLoading}
-          error={error}
-          onSubmit={handleSubmit}
-          submitLabel="Añadir parcela"
-        >
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={isLoading}
+        <div className={styles.modal__form}>
+          <ParcelaForm
+            isLoading={isLoading}
+            error={error}
+            onSubmit={handleSubmit}
+            submitLabel="Añadir parcela"
           >
-            Cancelar
-          </Button>
-        </ParcelaForm>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
+          </ParcelaForm>
+        </div>
       </div>
     </div>
   );

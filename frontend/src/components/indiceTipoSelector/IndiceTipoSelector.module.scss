@@ -1,0 +1,71 @@
+.selector {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+  }
+}
+
+.selector__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: oklch(0.55 0 0);
+  background: oklch(0.16 0.01 220 / 0.6);
+  border: 1.5px solid oklch(1 0 0 / 0.08);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+
+  @media (max-width: 560px) {
+    justify-content: flex-start;
+  }
+
+  &:hover:not(&--active) {
+    color: oklch(0.75 0 0);
+    background: oklch(0.19 0.01 220 / 0.7);
+    border-color: oklch(1 0 0 / 0.14);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--active {
+    color: oklch(0.9 0 0);
+    background: oklch(0.55 0.15 150 / 0.14);
+    border-color: oklch(0.55 0.15 150 / 0.5);
+  }
+
+  &--ndvi.selector__btn--active {
+    color: oklch(0.85 0.13 150);
+    background: oklch(0.55 0.15 150 / 0.14);
+    border-color: oklch(0.55 0.15 150 / 0.55);
+  }
+
+  &--ndwi.selector__btn--active {
+    color: oklch(0.8 0.1 230);
+    background: oklch(0.5 0.15 230 / 0.14);
+    border-color: oklch(0.5 0.15 230 / 0.55);
+  }
+
+  &--ndre.selector__btn--active {
+    color: oklch(0.82 0.12 75);
+    background: oklch(0.65 0.15 75 / 0.14);
+    border-color: oklch(0.65 0.15 75 / 0.55);
+  }
+}
+
+.selector__icon {
+  font-size: 1.125rem;
+  line-height: 1;
+}

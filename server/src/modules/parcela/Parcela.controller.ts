@@ -2,6 +2,10 @@ import type { FastifyReply } from "fastify";
 import mongoose from "mongoose";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
 import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
+import { AnalisisModel } from "../../schemas/Analisis.schema.js";
+import { CuadernoEntradaModel } from "../../schemas/CuadernoEntrada.schema.js";
+import { InsightModel } from "../../schemas/Insight.schema.js";
+import { ConversationModel } from "../../schemas/Chatbot.schema.js";
 import { CatastroService } from "../catastro/Catastro.service.js";
 import { ManejoCultivo } from "@agrospace/shared/enums/ManejoCultivo.enum";
 import {
@@ -15,6 +19,7 @@ import {
   type DeleteParcelaRequest,
 } from "./Parcela.interface.js";
 import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
+import { S3Service } from "../../services/S3.service.js";
 
 const verifyExplotacion = async (explotacionId: string, userId: string) => {
   if (!mongoose.isValidObjectId(explotacionId)) {
@@ -26,6 +31,29 @@ const verifyExplotacion = async (explotacionId: string, userId: string) => {
     throw new ParcelaForbiddenError();
   }
   return explotacion;
+};
+
+
+const cascadeDeleteParcela = async (
+  parcelaId: mongoose.Types.ObjectId,
+): Promise<void> => {
+  const analisis = await AnalisisModel.find({ parcelaId }, { imageUrl: 1 }).lean();
+  const s3Keys = analisis
+    .map((a) => S3Service.keyFromUrl(a.imageUrl))
+    .filter((key): key is string => key !== null);
+
+  await Promise.all([
+    AnalisisModel.deleteMany({ parcelaId }),
+    CuadernoEntradaModel.deleteMany({ parcelaId }),
+    InsightModel.deleteMany({ parcelaId }),
+    ConversationModel.updateMany({ parcelaId }, { $set: { parcelaId: null } }),
+  ]);
+
+  try {
+    await S3Service.deleteObjects(s3Keys);
+  } catch (error) {
+    console.error(`⚠️ Error borrando ${s3Keys.length} imágenes de S3:`, error);
+  }
 };
 
 const getAll = async (request: GetParcelasRequest, reply: FastifyReply) => {
@@ -122,6 +150,7 @@ const remove = async (request: DeleteParcelaRequest, reply: FastifyReply) => {
   if (!parcela) throw new ParcelaNotFoundError();
   if (parcela.userId.toString() !== userId) throw new ParcelaForbiddenError();
 
+  await cascadeDeleteParcela(parcela._id);
   await parcela.deleteOne();
 
   return reply.status(204).send();
