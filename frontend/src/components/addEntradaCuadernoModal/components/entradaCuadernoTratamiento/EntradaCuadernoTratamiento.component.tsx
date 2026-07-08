@@ -35,7 +35,7 @@ export const EntradaCuadernoTratamiento = ({
       <Input
         id="plaga"
         type="text"
-        label="Plaga / Enfermedad (opcional)"
+        label="Plaga / Enfermedad"
         placeholder="Mildiu, pulgón..."
         value={datos.plaga ?? ""}
         onChange={(e) =>

@@ -32,6 +32,7 @@ export async function buildApp() {
       "X-Analisis-Image-Id",
       "X-Analisis-Image-Date",
       "X-Analisis-Cloud-Cover",
+      "Content-Disposition",
     ],
   });
 

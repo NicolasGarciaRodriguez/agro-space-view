@@ -287,12 +287,54 @@ const postBlob = async (
   ) as Promise<Response>;
 };
 
+const getBlob = async (
+  url: string,
+  controller?: AbortController,
+  noTimeout: boolean = false,
+): Promise<Response> => {
+  if (!controller) {
+    controller = new AbortController();
+  }
+
+  const method = "GET";
+  const headers = await getHeaders();
+  const options: RequestInit = {
+    method,
+    headers,
+    signal: controller.signal,
+  };
+
+  const fetchPromise = fetch(url, options).then((response) => {
+    if (!response.ok) {
+      return response.json().then((errorBody) => {
+        return Promise.reject({
+          status: response.status,
+          message:
+            errorBody.error ?? errorBody.message ?? "Unknown error occurred",
+          code: errorBody.code,
+          isKO: errorBody.isKO,
+        });
+      });
+    }
+    return response;
+  });
+
+  if (noTimeout) {
+    return fetchPromise;
+  }
+
+  return Promise.race([fetchPromise, __timeoutPromise(controller)]).catch(
+    __handleError,
+  ) as Promise<Response>;
+};
+
 export const HttpService = {
   get,
   post,
   patch,
   delete: del,
   postBlob,
+  getBlob,
 };
 
 export default HttpService;

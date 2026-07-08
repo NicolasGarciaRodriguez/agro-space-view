@@ -98,6 +98,11 @@
     flex-direction: column;
     gap: 8px;
   }
+
+  &__headerActions {
+    display: flex;
+    gap: 8px;
+  }
 }
 
 @keyframes spin {

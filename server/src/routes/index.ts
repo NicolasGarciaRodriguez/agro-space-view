@@ -9,6 +9,7 @@ import CuadernoEntradaRoutes from "../modules/cuadernoEntrada/CuadernoEntrada.ro
 import AnalisisRoutes from "../modules/analisis/Analisis.routes.js";
 import InsightsRoutes from "../modules/insights/Insights.routes.js";
 import ChatbotRoutes from "../modules/chatbot/Chatbot.routes.js";
+import CuadernoExportRoutes from "../modules/cuadernoExport/CuadernoExport.routes.js";
 
 export default async function routes(fastify: FastifyInstance) {
   await fastify.register(AuthRoutes);
@@ -21,4 +22,5 @@ export default async function routes(fastify: FastifyInstance) {
   await fastify.register(CuadernoEntradaRoutes);
   await fastify.register(InsightsRoutes);
   await fastify.register(ChatbotRoutes);
+  await fastify.register(CuadernoExportRoutes);
 }

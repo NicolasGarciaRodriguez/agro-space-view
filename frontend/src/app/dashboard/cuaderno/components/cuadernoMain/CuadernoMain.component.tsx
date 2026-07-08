@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useExplotacionStore } from "@/stores/explotacion/Explotacion.store";
 import { CuadernoEntradaRepository } from "@agrospace/shared/repositories/CuadernoEntrada.repository";
+import { CuadernoExportRepository } from "@agrospace/shared/repositories/CuadernoExport.repository";
 import { ParcelaRepository } from "@agrospace/shared/repositories/Parcela.repository";
 import { AddEntradaCuadernoModal } from "@/components/addEntradaCuadernoModal/AddEntradaCuadernoModal.component";
 import { CuadernoFiltros } from "./components/cuadernoFiltros/CuadernoFiltros.component";
@@ -37,6 +38,7 @@ export const CuadernoMain = () => {
   });
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
 
   const LIMIT = 20;
 
@@ -115,6 +117,27 @@ export const CuadernoMain = () => {
     loadEntradas(newPage);
   };
 
+  const handleExport = async () => {
+    if (!activeExplotacion) return;
+    setError(null);
+    setIsExporting(true);
+    try {
+      await CuadernoExportRepository.exportExplotacion(
+        activeExplotacion._id,
+        filtros.dateFrom || undefined,
+        filtros.dateTo || undefined,
+      );
+    } catch (err) {
+      setError(
+        isHttpError(err)
+          ? (err.message ?? "Error al exportar el cuaderno.")
+          : "Error al exportar el cuaderno.",
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / LIMIT);
 
   const parcelaMap = Object.fromEntries(parcelas.map((p) => [p._id, p]));
@@ -137,7 +160,17 @@ export const CuadernoMain = () => {
             {total === 1 ? "entrada" : "entradas"}
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>+ Nueva entrada</Button>
+        <div className={styles.cuaderno__headerActions}>
+          <Button
+            variant="secondary"
+            onClick={handleExport}
+            loading={isExporting}
+            disabled={total === 0}
+          >
+            📥 Exportar Excel
+          </Button>
+          <Button onClick={() => setModalOpen(true)}>+ Nueva entrada</Button>
+        </div>
       </header>
 
       <CuadernoFiltros

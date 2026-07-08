@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CuadernoEntradaRepository } from "@agrospace/shared/repositories/CuadernoEntrada.repository";
+import { CuadernoExportRepository } from "@agrospace/shared/repositories/CuadernoExport.repository";
 import { AddEntradaCuadernoModal } from "@/components/addEntradaCuadernoModal/AddEntradaCuadernoModal.component";
 import { Button } from "@/components/button/Button.component";
 import { CuadernoCard } from "@/components/cuadernoCard/CuadernoCard.component";
@@ -22,6 +23,7 @@ export const ParcelaCuaderno = ({
   const [entradaToEdit, setEntradaToEdit] = useState<CuadernoEntradaDTO | null>(
     null,
   );
+  const [isExporting, setIsExporting] = useState(false);
 
   const loadEntradas = async () => {
     setIsLoading(true);
@@ -72,13 +74,40 @@ export const ParcelaCuaderno = ({
     }
   };
 
+  const handleExport = async () => {
+    setError(null);
+    setIsExporting(true);
+    try {
+      await CuadernoExportRepository.exportParcela(parcelaId);
+    } catch (err) {
+      setError(
+        isHttpError(err)
+          ? (err.message ?? "Error al exportar el cuaderno.")
+          : "Error al exportar el cuaderno.",
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <section className={styles.cuaderno}>
       <div className={styles.cuaderno__header}>
         <h2 className={styles.cuaderno__title}>Cuaderno de campo</h2>
-        <Button size="sm" onClick={() => setModalOpen(true)}>
-          + Nueva entrada
-        </Button>
+        <div className={styles.cuaderno__headerActions}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleExport}
+            loading={isExporting}
+            disabled={entradas.length === 0}
+          >
+            📥 Exportar
+          </Button>
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            + Nueva entrada
+          </Button>
+        </div>
       </div>
 
       {error && (

@@ -83,6 +83,11 @@
       color: oklch(0.55 0 0);
     }
   }
+
+  &__headerActions {
+    display: flex;
+    gap: 8px;
+  }
 }
 
 @keyframes spin {

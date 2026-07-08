@@ -1,0 +1,1 @@
+export const CUADERNO_EXPORT_ROUTE_PREFIX = "/api/cuaderno/export" as const;
