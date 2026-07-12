@@ -10,7 +10,7 @@ import {
   type DeleteExplotacionRequest,
   GetExplotacionStatsRequest,
 } from "./Explotacion.interface.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 
 export default function ExplotacionRoutes(
   fastify: FastifyInstance,
@@ -18,6 +18,7 @@ export default function ExplotacionRoutes(
   done: (err?: Error) => void,
 ): void {
   fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
 
   fastify.get(
     EXPLOTACION_ROUTE_PREFIX,

@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { CUADERNO_EXPORT_ROUTE_PREFIX } from "./CuadernoExport.config.js";
 import { CuadernoExportController } from "./CuadernoExport.controller.js";
 import { ExportForbiddenError } from "./CuadernoExport.interface.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 import type {
   ExportParcelaRequest,
   ExportExplotacionRequest,
@@ -14,6 +14,7 @@ export default function CuadernoExportRoutes(
   done: (err?: Error) => void,
 ): void {
   fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
 
   fastify.get(
     `${CUADERNO_EXPORT_ROUTE_PREFIX}/parcela/:parcelaId`,

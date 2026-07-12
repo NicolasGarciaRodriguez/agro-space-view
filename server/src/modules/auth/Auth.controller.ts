@@ -4,14 +4,40 @@ import { BCRYPT_SALT_ROUNDS, JWT_EXPIRY } from "./Auth.config.js";
 import {
   EmailAlreadyExistsError,
   InvalidCredentialsError,
+  UserNotFoundError,
   type LogInRequest,
   type RegistrationRequest,
+  type GetMeRequest,
   type AuthResponse,
+  type AuthUserResponse,
   type JWTPayload,
 } from "./Auth.interface.js";
 import { UserModel } from "../../schemas/User.schema.js";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
+import { EmailVerificationService } from "../emailVerification/EmailVerification.service.js";
+
+// Construye la forma AuthUserResponse a partir del documento de Mongo,
+// evitando repetir el mapeo campo a campo en cada handler.
+const toAuthUserResponse = (user: {
+  _id: unknown;
+  email: string;
+  nombre: string;
+  apellidos: string;
+  role: UserRole;
+  plan: UserPlan;
+  emailVerificationStatus: AuthUserResponse["emailVerificationStatus"];
+  emailVerificationDeadline: Date;
+}): AuthUserResponse => ({
+  id: String(user._id),
+  email: user.email,
+  nombre: user.nombre,
+  apellidos: user.apellidos,
+  role: user.role,
+  plan: user.plan,
+  emailVerificationStatus: user.emailVerificationStatus,
+  emailVerificationDeadline: user.emailVerificationDeadline,
+});
 
 const registration = async (
   request: RegistrationRequest,
@@ -34,6 +60,12 @@ const registration = async (
     plan: UserPlan.GRATIS,
   });
 
+  EmailVerificationService.sendVerificationEmail(user._id.toString()).catch(
+    (error) => {
+      console.error("Error enviando email de verificación:", error);
+    },
+  );
+
   const payload: JWTPayload = {
     userId: user._id.toString(),
     email: user.email,
@@ -45,14 +77,7 @@ const registration = async (
 
   const response: AuthResponse = {
     token,
-    user: {
-      id: user._id.toString(),
-      email: user.email,
-      nombre: user.nombre,
-      apellidos: user.apellidos,
-      role: user.role,
-      plan: user.plan,
-    },
+    user: toAuthUserResponse(user),
   };
 
   return reply.status(201).send(response);
@@ -81,17 +106,25 @@ const logIn = async (
 
   const response: AuthResponse = {
     token,
-    user: {
-      id: user._id.toString(),
-      email: user.email,
-      nombre: user.nombre,
-      apellidos: user.apellidos,
-      role: user.role,
-      plan: user.plan,
-    },
+    user: toAuthUserResponse(user),
   };
 
   return reply.send(response);
 };
 
-export const AuthController = { logIn, registration };
+// Devuelve el usuario actual fresco desde Mongo — usado por el
+// frontend para refrescar el store tras cambios de estado (por
+// ejemplo, verificar el email en otra pestaña o desde el enlace).
+const getMe = async (
+  request: GetMeRequest,
+  reply: FastifyReply,
+): Promise<void> => {
+  const { userId } = request.user;
+
+  const user = await UserModel.findById(userId).lean();
+  if (!user) throw new UserNotFoundError();
+
+  return reply.send(toAuthUserResponse(user));
+};
+
+export const AuthController = { logIn, registration, getMe };

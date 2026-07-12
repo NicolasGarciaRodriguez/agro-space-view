@@ -11,7 +11,7 @@ import {
   type UpdateParcelaRequest,
   type DeleteParcelaRequest,
 } from "./Parcela.interface.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 import { UsageLimitExceededError } from "../usageLimits/UsageLimits.interface.js";
 
 const PREFIX = `${PARCELA_ROUTE_PREFIX}/:explotacionId/parcelas`;
@@ -35,6 +35,7 @@ export default function ParcelaRoutes(
   done: (err?: Error) => void,
 ): void {
   fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
 
   fastify.get(
     PREFIX,

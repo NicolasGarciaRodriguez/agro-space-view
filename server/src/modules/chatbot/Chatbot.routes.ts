@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { CHATBOT_ROUTE_PREFIX } from "./Chatbot.config.js";
 import { ChatbotController } from "./Chatbot.controller.js";
 import { ConversationNotFoundError } from "./Chatbot.interface.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 import type {
   CreateConversationRequest,
   SendMessageRequest,
@@ -18,6 +18,7 @@ export default function ChatbotRoutes(
   done: (err?: Error) => void,
 ): void {
   fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
 
   fastify.post(
     `${CHATBOT_ROUTE_PREFIX}/conversations`,

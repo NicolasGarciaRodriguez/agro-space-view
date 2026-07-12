@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { INSIGHTS_ROUTE_PREFIX } from "./Insights.config.js";
 import { InsightsController } from "./Insights.controller.js";
 import { InsightGenerationError } from "./Insights.interface.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 import type {
   GetInsightParcelaRequest,
   GetInsightExplotacionRequest,
@@ -14,6 +14,7 @@ export default function InsightsRoutes(
   done: (err?: Error) => void,
 ): void {
   fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
 
   fastify.get(
     `${INSIGHTS_ROUTE_PREFIX}/parcela/:parcelaId`,

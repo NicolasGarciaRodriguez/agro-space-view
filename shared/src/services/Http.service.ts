@@ -213,8 +213,12 @@ const __handleResponse = async (response: Response): Promise<unknown> => {
       errorMsg = "Error processing response";
     }
 
+    if (errorCode === "EMAIL_VERIFICATION_REQUIRED") {
+      onEmailVerificationRequired?.();
+    }
+
     return Promise.reject({
-      ...errorBody, // ← propaga cualquier campo extra (como "faltantes")
+      ...errorBody,
       status: response.status,
       message: errorMsg,
       code: errorCode,
@@ -326,6 +330,12 @@ const getBlob = async (
   return Promise.race([fetchPromise, __timeoutPromise(controller)]).catch(
     __handleError,
   ) as Promise<Response>;
+};
+
+let onEmailVerificationRequired: (() => void) | null = null;
+
+export const setOnEmailVerificationRequired = (callback: () => void) => {
+  onEmailVerificationRequired = callback;
 };
 
 export const HttpService = {

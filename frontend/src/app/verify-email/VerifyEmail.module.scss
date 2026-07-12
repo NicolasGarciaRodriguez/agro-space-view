@@ -1,0 +1,93 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.08 0.01 220);
+  padding: 1.5rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: oklch(0.14 0.01 220 / 0.98);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 48px oklch(0 0 0 / 0.5);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+
+  &__spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid oklch(1 0 0 / 0.1);
+    border-top-color: oklch(0.55 0.15 150);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-bottom: 0.5rem;
+  }
+
+  &__icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.75rem;
+    background: oklch(0.55 0.15 150 / 0.15);
+    color: oklch(0.65 0.15 150);
+    margin-bottom: 0.5rem;
+
+    &[data-error] {
+      background: oklch(0.5 0.18 25 / 0.15);
+      color: oklch(0.7 0.18 25);
+    }
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: oklch(0.92 0 0);
+  }
+
+  &__text {
+    font-size: 0.9375rem;
+    color: oklch(0.65 0 0);
+    line-height: 1.6;
+  }
+
+  &__hint {
+    font-size: 0.8125rem;
+    color: oklch(0.5 0 0);
+    line-height: 1.5;
+  }
+
+  &__button {
+    margin-top: 0.5rem;
+    padding: 12px 24px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: white;
+    background: oklch(0.55 0.15 150);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -4,6 +4,7 @@ import type {
   LoginDTO,
   RegisterDTO,
   AuthResponseDTO,
+  AuthUserDTO,
 } from "../dtos/Auth.dto.js";
 
 const BASE = () => `${getBaseUrl()}/auth`;
@@ -22,4 +23,8 @@ const register = async (params: RegisterDTO): Promise<AuthResponseDTO> => {
   ) as Promise<AuthResponseDTO>;
 };
 
-export const AuthRepository = { login, register };
+const getMe = async (): Promise<AuthUserDTO> => {
+  return HttpService.get(`${BASE()}/me`) as Promise<AuthUserDTO>;
+};
+
+export const AuthRepository = { login, register, getMe };

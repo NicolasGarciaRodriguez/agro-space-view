@@ -1,4 +1,6 @@
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
+import { EmailVerificationStatus } from "@agrospace/shared/enums/EmailVerificationStatus.enum";
 
 export interface LoginDTO {
   email: string;
@@ -19,6 +21,9 @@ export interface AuthUserDTO {
   nombre: string;
   apellidos: string;
   role: UserRole;
+  plan: UserPlan;
+  emailVerificationStatus: EmailVerificationStatus;
+  emailVerificationDeadline: string;
 }
 
 export interface AuthResponseDTO {

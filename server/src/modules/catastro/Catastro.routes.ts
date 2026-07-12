@@ -9,12 +9,16 @@ import type {
   GetParcelByRefRequest,
   GetParcelByCoordsRequest,
 } from "./Catastro.interface.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 
 export default function CatastroRoutes(
   fastify: FastifyInstance,
   _options: unknown,
   done: (err?: Error) => void,
 ): void {
+  fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
+
   fastify.get(
     `${CATASTRO_ROUTE_PREFIX}/parcel`,
     async (request: GetParcelByRefRequest, reply: FastifyReply) => {

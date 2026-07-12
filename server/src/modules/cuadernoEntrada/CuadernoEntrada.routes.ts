@@ -9,7 +9,7 @@ import {
   type UpdateEntradaRequest,
   type DeleteEntradaRequest,
 } from "./CuadernoEntrada.interface.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 
 const handleErrors = (error: unknown, reply: FastifyReply) => {
   if (error instanceof EntradaNotFoundError) {
@@ -27,6 +27,7 @@ export default function CuadernoEntradaRoutes(
   done: (err?: Error) => void,
 ): void {
   fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
 
   fastify.post(
     CUADERNO_ROUTE_PREFIX,

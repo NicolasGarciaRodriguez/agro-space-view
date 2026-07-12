@@ -3,7 +3,7 @@ import { ANALISIS_ROUTE_PREFIX } from "./Analisis.config.js";
 import { AnalisisController } from "./Analisis.controller.js";
 import { NoImagesFoundError } from "./Analisis.service.js";
 import { AnalisisNotFoundError } from "./Analisis.interface.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 import type {
   AnalyseRequest,
   GetTimeSeriesRequest,
@@ -19,6 +19,7 @@ export default function AnalisisRoutes(
   done: (err?: Error) => void,
 ): void {
   fastify.addHook("onRequest", authenticate);
+  fastify.addHook("onRequest", requireVerifiedEmail);
 
   // ─── Cálculo ────────────────────────────────────────────────────
 
