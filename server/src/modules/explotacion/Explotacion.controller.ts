@@ -126,8 +126,6 @@ const getStats = async (
   const parcelas = await ParcelaModel.find({ explotacionId, userId }).lean();
   const parcelaIds = parcelas.map((p) => p._id);
 
-  // Las stats del dashboard se basan en NDVI (salud general de la
-  // vegetación). Filtramos por tipo para no mezclar índices distintos.
   const ultimosAnalisis = await AnalisisModel.aggregate([
     {
       $match: {
@@ -171,19 +169,19 @@ const getStats = async (
       )
     : null;
 
-  const ndviMedio =
-    ultimosAnalisis.length > 0
-      ? Math.round(
-          (ultimosAnalisis.reduce((a, b) => a + b.indiceMedio, 0) /
-            ultimosAnalisis.length) *
-            1000,
-        ) / 1000
-      : null;
+  // Sustituye al antiguo "ndviMedio": no tiene sentido promediar NDVI
+  // entre cultivos distintos (el rango sano de un cereal no es el de
+  // un viñedo). En su lugar, contamos cuántas parcelas analizadas
+  // superan el umbral de alerta — una métrica accionable y comparable
+  // entre cualquier combinación de cultivos.
+  const parcelasEnBuenEstado = ultimosAnalisis.filter(
+    (a) => a.indiceMedio >= NDVI_ALERT_THRESHOLD,
+  ).length;
 
   return reply.send({
     totalParcelas: parcelas.length,
     parcelasAnalizadas: ultimosAnalisis.length,
-    ndviMedio,
+    parcelasEnBuenEstado,
     ultimoAnalisis: ultimoAnalisis?.createdAt ?? null,
     diasSinAnalizar,
     parcelaMejor: mejor

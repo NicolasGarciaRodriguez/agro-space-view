@@ -15,6 +15,7 @@
 .sidebar {
   width: 260px;
   height: 100vh;
+  height: 100dvh; // ← fallback progresivo: dvh donde esté soportado
   position: fixed;
   left: 0;
   top: 0;

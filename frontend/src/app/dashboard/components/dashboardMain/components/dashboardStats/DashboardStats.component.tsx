@@ -21,17 +21,31 @@ const getNdviColor = (ndvi: number): string => {
   return "oklch(0.65 0.18 25)";
 };
 
+const getBuenEstadoColor = (
+  enBuenEstado: number,
+  analizadas: number,
+): string => {
+  if (analizadas === 0) return "oklch(0.5 0 0)";
+  const ratio = enBuenEstado / analizadas;
+  if (ratio === 1) return "oklch(0.65 0.15 150)";
+  if (ratio >= 0.5) return "oklch(0.75 0.15 90)";
+  return "oklch(0.65 0.18 25)";
+};
+
 export const DashboardStats = ({
   totalParcelas,
   superficieTotal,
   stats,
 }: DashboardStatsProps) => {
+  const analizadas = stats?.parcelasAnalizadas ?? 0;
+  const enBuenEstado = stats?.parcelasEnBuenEstado ?? 0;
+
   const cards = [
     {
       icon: "🗺",
       label: "Parcelas",
       value: totalParcelas.toString(),
-      hint: `${stats?.parcelasAnalizadas ?? 0} analizadas`,
+      hint: `${analizadas} analizadas`,
     },
     {
       icon: "📐",
@@ -40,19 +54,19 @@ export const DashboardStats = ({
       hint: "suma de todas las parcelas",
     },
     {
-      icon: "🛰",
-      label: "NDVI medio",
-      value: stats?.ndviMedio != null ? stats.ndviMedio.toFixed(3) : "—",
+      icon: "✅",
+      label: "En buen estado",
+      value: analizadas > 0 ? `${enBuenEstado}/${analizadas}` : "—",
       hint:
-        stats?.ndviMedio != null
-          ? stats.ndviMedio >= 0.6
-            ? "Vegetación sana"
-            : stats.ndviMedio >= 0.3
-              ? "Vegetación moderada"
-              : "Estrés detectado"
-          : "Sin análisis aún",
+        analizadas === 0
+          ? "Sin análisis aún"
+          : enBuenEstado === analizadas
+            ? "Todas por encima del umbral"
+            : `${analizadas - enBuenEstado} con posible estrés`,
       color:
-        stats?.ndviMedio != null ? getNdviColor(stats.ndviMedio) : undefined,
+        analizadas > 0
+          ? getBuenEstadoColor(enBuenEstado, analizadas)
+          : undefined,
     },
     {
       icon: "📅",

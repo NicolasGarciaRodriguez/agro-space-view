@@ -31,7 +31,7 @@ export interface ParcelaStatDTO {
 export interface ExplotacionStatsDTO {
   totalParcelas: number;
   parcelasAnalizadas: number;
-  ndviMedio: number | null;
+  parcelasEnBuenEstado: number;
   ultimoAnalisis: string | null;
   diasSinAnalizar: number | null;
   parcelaMejor: ParcelaStatDTO | null;
