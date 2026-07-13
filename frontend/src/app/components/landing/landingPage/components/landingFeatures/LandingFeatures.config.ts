@@ -6,6 +6,7 @@ export const FEATURES = [
     body: "Accede a imágenes satelitales gratuitas con 10m de resolución, actualizadas cada 5 días para cualquier parcela de España.",
     stat: "10m",
     statLabel: "resolución",
+    soon: false,
   },
   {
     icon: "🌱",
@@ -14,6 +15,7 @@ export const FEATURES = [
     body: "No te quedes solo con el vigor general: detecta estrés hídrico con NDWI y déficit nutricional con NDRE, semanas antes de que sean visibles a simple vista.",
     stat: "3",
     statLabel: "índices satelitales",
+    soon: false,
   },
   {
     icon: "🤖",
@@ -22,6 +24,7 @@ export const FEATURES = [
     body: "Cada análisis genera un diagnóstico claro de tu parcela: qué está pasando, por qué, y qué hacer. Sin interpretar gráficas tú mismo.",
     stat: "24/7",
     statLabel: "análisis automático",
+    soon: false,
   },
   {
     icon: "💬",
@@ -30,6 +33,7 @@ export const FEATURES = [
     body: "Pregunta lo que necesites sobre tus parcelas y recibe respuestas basadas en tus datos reales de satélite, clima y cuaderno de campo — no consejos genéricos.",
     stat: "100%",
     statLabel: "contextualizado",
+    soon: false,
   },
   {
     icon: "📓",
@@ -38,6 +42,7 @@ export const FEATURES = [
     body: "Registra riegos, fertilizaciones, tratamientos y cosechas. Cruza tus datos de campo con el análisis satelital y la IA.",
     stat: "100%",
     statLabel: "trazabilidad",
+    soon: false,
   },
   {
     icon: "📋",
@@ -46,5 +51,6 @@ export const FEATURES = [
     body: "Exporta tus tratamientos y fertilizaciones en el formato que exige el Cuaderno Digital de Explotación, listo para presentar en tu comunidad autónoma.",
     stat: "2027",
     statLabel: "obligatorio",
+    soon: true,
   },
 ];
