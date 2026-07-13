@@ -3,7 +3,6 @@ import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 import { EmailVerificationStatus } from "@agrospace/shared/enums/EmailVerificationStatus.enum";
 
-// 3 días de plazo desde el registro antes de bloquear el acceso
 const VERIFICATION_DEADLINE_DAYS = 3;
 
 export interface IUser {
@@ -18,6 +17,8 @@ export interface IUser {
   emailVerificationToken: string | null;
   emailVerificationExpires: Date | null;
   emailVerificationDeadline: Date;
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,19 +53,15 @@ const UserSchema = new Schema<IUserDocument>(
       enum: Object.values(EmailVerificationStatus),
       default: EmailVerificationStatus.PENDIENTE,
     },
-    emailVerificationToken: {
-      type: String,
-      default: null,
-    },
-    emailVerificationExpires: {
-      type: Date,
-      default: null,
-    },
+    emailVerificationToken: { type: String, default: null },
+    emailVerificationExpires: { type: Date, default: null },
     emailVerificationDeadline: {
       type: Date,
       default: () =>
         new Date(Date.now() + VERIFICATION_DEADLINE_DAYS * 24 * 60 * 60 * 1000),
     },
+    passwordResetToken: { type: String, default: null },
+    passwordResetExpires: { type: Date, default: null },
   },
   { timestamps: true, versionKey: false },
 );

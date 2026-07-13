@@ -92,4 +92,23 @@
     border: 1px solid oklch(0.5 0.18 25 / 0.2);
     border-radius: var(--radius-md);
   }
+
+  &__passwordField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  &__forgotLink {
+    align-self: flex-end;
+    font-size: 0.8125rem;
+    color: oklch(0.6 0.1 150);
+    text-decoration: none;
+    transition: color 0.15s;
+  
+    &:hover {
+      color: oklch(0.7 0.12 150);
+      text-decoration: underline;
+    }
+  }
 }

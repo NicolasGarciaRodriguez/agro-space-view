@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/register", "/verify-email"];
+const PUBLIC_ROUTES = ["/login", "/register"];
+const ALWAYS_ACCESSIBLE_ROUTES = [
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+];
 const DASHBOARD_ROUTE = "/dashboard";
 
 export function middleware(request: NextRequest) {
@@ -11,6 +16,10 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = !!token;
 
   if (pathname === "/") {
+    return NextResponse.next();
+  }
+
+  if (ALWAYS_ACCESSIBLE_ROUTES.includes(pathname)) {
     return NextResponse.next();
   }
 

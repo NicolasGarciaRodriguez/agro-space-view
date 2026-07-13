@@ -16,6 +16,7 @@ import { UserModel } from "../../schemas/User.schema.js";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 import { EmailVerificationService } from "../emailVerification/EmailVerification.service.js";
+import { isPasswordValid } from "@agrospace/shared/config/PasswordRules.config";
 
 // Construye la forma AuthUserResponse a partir del documento de Mongo,
 // evitando repetir el mapeo campo a campo en cada handler.
@@ -44,6 +45,12 @@ const registration = async (
   reply: FastifyReply,
 ): Promise<void> => {
   const { email, password, nombre, apellidos, telefono } = request.body;
+
+  if (!isPasswordValid(password)) {
+    return reply.status(400).send({
+      error: "La contraseña no cumple los requisitos mínimos de seguridad",
+    });
+  }
 
   const existing = await UserModel.findOne({ email: email.toLowerCase() });
   if (existing) throw new EmailAlreadyExistsError();

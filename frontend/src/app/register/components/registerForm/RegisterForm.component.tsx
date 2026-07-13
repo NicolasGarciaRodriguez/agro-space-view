@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthRepository } from "@agrospace/shared/repositories/Auth.repository";
+import {
+  PASSWORD_RULES,
+  isPasswordValid,
+} from "@agrospace/shared/config/PasswordRules.config";
 import { Input } from "@/components/input/Input.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
@@ -22,6 +26,7 @@ export const RegisterForm = () => {
     apellidos: "",
     telefono: "",
   });
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,8 +43,8 @@ export const RegisterForm = () => {
       return;
     }
 
-    if (form.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+    if (!isPasswordValid(form.password)) {
+      setError("La contraseña no cumple los requisitos mínimos");
       return;
     }
 
@@ -132,18 +137,39 @@ export const RegisterForm = () => {
             autoComplete="tel"
           />
 
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            label="Contraseña"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={handleChange}
-            disabled={isLoading}
-            autoComplete="new-password"
-            required
-          />
+          <div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              label="Contraseña"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={handleChange}
+              onFocus={() => setPasswordFocused(true)}
+              disabled={isLoading}
+              autoComplete="new-password"
+              required
+            />
+            {(passwordFocused || form.password.length > 0) && (
+              <ul className={styles.form__passwordRules}>
+                {PASSWORD_RULES.map((rule) => {
+                  const met = rule.test(form.password);
+                  return (
+                    <li
+                      key={rule.id}
+                      className={[
+                        styles.form__passwordRule,
+                        met ? styles["form__passwordRule--met"] : "",
+                      ].join(" ")}
+                    >
+                      {met ? "✓" : "○"} {rule.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
 
           <Input
             id="confirmPassword"

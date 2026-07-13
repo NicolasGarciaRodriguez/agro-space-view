@@ -65,17 +65,22 @@ export const LoginForm = () => {
             required
           />
 
-          <Input
-            id="password"
-            type="password"
-            label="Contraseña"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            autoComplete="current-password"
-            required
-          />
+          <div className={styles.form__passwordField}>
+            <Input
+              id="password"
+              type="password"
+              label="Contraseña"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              autoComplete="current-password"
+              required
+            />
+            <Link href="/forgot-password" className={styles.form__forgotLink}>
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
 
           {error && (
             <p className={styles.form__error} role="alert">

@@ -11,6 +11,7 @@ import InsightsRoutes from "../modules/insights/Insights.routes.js";
 import ChatbotRoutes from "../modules/chatbot/Chatbot.routes.js";
 import CuadernoExportRoutes from "../modules/cuadernoExport/CuadernoExport.routes.js";
 import EmailVerificationRoutes from "../modules/emailVerification/EmailVerification.routes.js";
+import PasswordResetRoutes from "../modules/passwordReset/PasswordReset.routes.js";
 
 export default async function routes(fastify: FastifyInstance) {
   await fastify.register(AuthRoutes);
@@ -25,4 +26,5 @@ export default async function routes(fastify: FastifyInstance) {
   await fastify.register(ChatbotRoutes);
   await fastify.register(CuadernoExportRoutes);
   await fastify.register(EmailVerificationRoutes);
+  await fastify.register(PasswordResetRoutes);
 }
