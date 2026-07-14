@@ -33,7 +33,8 @@ const generateJSON = async <T>(params: GenerateJSONParams): Promise<T> => {
   });
 
   const textBlock = response.content.find(
-    (block) => block.type === AnthropicContentBlockType.TEXT,
+    (block: Anthropic.ContentBlock) =>
+      block.type === AnthropicContentBlockType.TEXT,
   );
   if (!textBlock || textBlock.type !== AnthropicContentBlockType.TEXT) {
     throw new Error("Respuesta de Anthropic sin contenido de texto");
@@ -121,7 +122,8 @@ const generateWithTools = async (
 
     if (response.stop_reason !== "tool_use") {
       const textBlock = response.content.find(
-        (b) => b.type === AnthropicContentBlockType.TEXT,
+        (b: Anthropic.ContentBlock) =>
+          b.type === AnthropicContentBlockType.TEXT,
       );
       const finalText =
         textBlock && textBlock.type === AnthropicContentBlockType.TEXT
@@ -136,7 +138,8 @@ const generateWithTools = async (
     });
 
     const toolUseBlocks = response.content.filter(
-      (b) => b.type === AnthropicContentBlockType.TOOL_USE,
+      (b: Anthropic.ContentBlock) =>
+        b.type === AnthropicContentBlockType.TOOL_USE,
     );
     const toolResults: Array<{
       type: AnthropicContentBlockType.TOOL_RESULT;
