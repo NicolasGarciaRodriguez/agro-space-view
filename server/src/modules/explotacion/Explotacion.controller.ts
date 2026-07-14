@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import mongoose from "mongoose";
 import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
+import { ExplotacionMiembroModel } from "../../schemas/ExplotacionMiembro.schema.js";
 import {
   ExplotacionNotFoundError,
   ExplotacionForbiddenError,
@@ -14,13 +15,63 @@ import { AnalisisModel } from "../../schemas/Analisis.schema.js";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import { NDVI_ALERT_THRESHOLD } from "./Explotacion.config.js";
+import { NivelAcceso } from "@agrospace/shared/enums/NivelAcceso.enum";
+import { ExplotacionAccessRole } from "@agrospace/shared/enums/ExplotacionAccessRole.enum";
+import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
+import { mapNivelAccesoToRole } from "../../mappers/NivelAccesoToRole.mapper.js";
+import {
+  ExplotacionAccessService,
+} from "../../services/explotacionAccess/ExplotacionAccess.service.js";
+import {
+  ExplotacionAccessDeniedError,
+  ExplotacionNotFoundForAccessError,
+} from "../../services/explotacionAccess/ExplotacionAccess.interface.js";
+
+const translateAccessError = (error: unknown): never => {
+  if (error instanceof ExplotacionNotFoundForAccessError) {
+    throw new ExplotacionNotFoundError();
+  }
+  if (error instanceof ExplotacionAccessDeniedError) {
+    throw new ExplotacionForbiddenError();
+  }
+  throw error;
+};
 
 const getAll = async (request: FastifyRequest, reply: FastifyReply) => {
   const { userId } = request.user;
 
-  const explotaciones = await ExplotacionModel.find({ userId })
-    .sort({ createdAt: -1 })
-    .lean();
+  const propias = await ExplotacionModel.find({ userId }).lean();
+
+  const miembros = await ExplotacionMiembroModel.find({ userId }).lean();
+  const nivelPorExplotacion = new Map(
+    miembros.map((m) => [m.explotacionId.toString(), m.nivelAcceso]),
+  );
+  const explotacionIdsCompartidas = miembros.map((m) => m.explotacionId);
+
+  const compartidas = explotacionIdsCompartidas.length
+    ? await ExplotacionModel.find({
+        _id: { $in: explotacionIdsCompartidas },
+      }).lean()
+    : [];
+
+  // Cada explotación se enriquece con el nivel de acceso del usuario
+  // actual sobre ella — "owner" para las propias, el nivel concreto
+  // (traducido con el mapper) para las compartidas.
+  const propiasConNivel = propias.map((e) => ({
+    ...e,
+    nivelAcceso: ExplotacionAccessRole.OWNER,
+  }));
+
+  const compartidasConNivel = compartidas.map((e) => ({
+    ...e,
+    nivelAcceso: mapNivelAccesoToRole(
+      nivelPorExplotacion.get(e._id.toString())!,
+    ),
+  }));
+
+  const explotaciones = [...propiasConNivel, ...compartidasConNivel].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  );
 
   return reply.send(explotaciones);
 };
@@ -29,18 +80,19 @@ const getById = async (request: GetExplotacionRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { id } = request.params;
 
-  if (!mongoose.isValidObjectId(id)) {
-    throw new ExplotacionNotFoundError();
+  let accessResult;
+  try {
+    accessResult = await ExplotacionAccessService.checkAccess(
+      userId,
+      id,
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
   }
 
   const explotacion = await ExplotacionModel.findById(id).lean();
-
-  if (!explotacion) throw new ExplotacionNotFoundError();
-  if (explotacion.userId.toString() !== userId) {
-    throw new ExplotacionForbiddenError();
-  }
-
-  return reply.send(explotacion);
+  return reply.send({ ...explotacion, nivelAcceso: accessResult!.nivelAcceso });
 };
 
 const create = async (
@@ -49,6 +101,8 @@ const create = async (
 ) => {
   const { userId } = request.user;
   const { nombre, provincia, municipio, descripcion } = request.body;
+
+  await UsageLimitsService.assertCanCreateExplotacion(userId);
 
   const explotacion = await ExplotacionModel.create({
     userId,
@@ -103,6 +157,8 @@ const remove = async (
 
   await explotacion.deleteOne();
 
+  await ExplotacionMiembroModel.deleteMany({ explotacionId: id });
+
   return reply.status(204).send();
 };
 
@@ -113,24 +169,23 @@ const getStats = async (
   const { userId } = request.user;
   const { id: explotacionId } = request.params;
 
-  if (!mongoose.isValidObjectId(explotacionId)) {
-    throw new ExplotacionNotFoundError();
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      explotacionId,
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
   }
 
-  const explotacion = await ExplotacionModel.findById(explotacionId).lean();
-  if (!explotacion) throw new ExplotacionNotFoundError();
-  if (explotacion.userId.toString() !== userId) {
-    throw new ExplotacionForbiddenError();
-  }
-
-  const parcelas = await ParcelaModel.find({ explotacionId, userId }).lean();
+  const parcelas = await ParcelaModel.find({ explotacionId }).lean();
   const parcelaIds = parcelas.map((p) => p._id);
 
   const ultimosAnalisis = await AnalisisModel.aggregate([
     {
       $match: {
         parcelaId: { $in: parcelaIds },
-        userId: new mongoose.Types.ObjectId(userId),
         tipo: IndiceTipo.NDVI,
       },
     },
@@ -169,11 +224,6 @@ const getStats = async (
       )
     : null;
 
-  // Sustituye al antiguo "ndviMedio": no tiene sentido promediar NDVI
-  // entre cultivos distintos (el rango sano de un cereal no es el de
-  // un viñedo). En su lugar, contamos cuántas parcelas analizadas
-  // superan el umbral de alerta — una métrica accionable y comparable
-  // entre cualquier combinación de cultivos.
   const parcelasEnBuenEstado = ultimosAnalisis.filter(
     (a) => a.indiceMedio >= NDVI_ALERT_THRESHOLD,
   ).length;

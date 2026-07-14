@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ParcelaRepository } from "@agrospace/shared/repositories/Parcela.repository";
 import { useExplotacionStore } from "@/stores/explotacion/Explotacion.store";
@@ -28,9 +28,25 @@ export const ParcelaDetail = ({ id }: ParcelaDetailProps) => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ParcelaTab>(DEFAULT_TAB);
 
+  // Guarda la explotación con la que se cargó esta parcela por
+  // primera vez. Si el usuario cambia de explotación activa mientras
+  // sigue en esta pantalla, lo detectamos aquí para sacarlo antes de
+  // que los botones se re-evalúen con el nivelAcceso equivocado.
+  const explotacionInicialRef = useRef<string | null>(null);
+
   useEffect(() => {
+    if (!activeExplotacion) return;
+
+    if (explotacionInicialRef.current === null) {
+      explotacionInicialRef.current = activeExplotacion._id;
+    } else if (explotacionInicialRef.current !== activeExplotacion._id) {
+      // Cambió la explotación activa mientras estábamos aquí dentro —
+      // esta parcela ya no pertenece al contexto que se está viendo.
+      router.push("/dashboard");
+      return;
+    }
+
     const load = async () => {
-      if (!activeExplotacion) return;
       try {
         const data = await ParcelaRepository.getById(activeExplotacion._id, id);
         setParcela(data);
@@ -80,13 +96,10 @@ export const ParcelaDetail = ({ id }: ParcelaDetailProps) => {
         ← Volver a parcelas
       </button>
 
-      {/* Info siempre visible */}
       <ParcelaInfo parcela={parcela} />
 
-      {/* Diagnóstico IA — siempre visible, no escondido en un tab */}
       <ParcelaInsight parcelaId={parcela._id.toString()} />
 
-      {/* Tabs */}
       <div className={styles.tabs}>
         {PARCELA_TABS.map((tab) => (
           <button
@@ -105,7 +118,6 @@ export const ParcelaDetail = ({ id }: ParcelaDetailProps) => {
         ))}
       </div>
 
-      {/* Contenido de la tab activa */}
       <div className={styles.detail__content}>
         {activeTab === "mapa" && <ParcelaAnalisisMapa parcela={parcela} />}
         {activeTab === "analisis" && (

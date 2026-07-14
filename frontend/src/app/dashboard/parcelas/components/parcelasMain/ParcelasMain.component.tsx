@@ -7,6 +7,7 @@ import { ParcelaCard } from "./components/parcelaCard/ParcelaCard.component";
 import { AddParcelaModal } from "./components/addParcelaModal/AddParcelaModal.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
+import { canManage } from "@/lib/access";
 import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
 import styles from "./ParcelasMain.module.scss";
 
@@ -18,6 +19,8 @@ export const ParcelasMain = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const puedeGestionar = canManage(activeExplotacion?.nivelAcceso);
 
   const loadParcelas = async () => {
     if (!activeExplotacion) return;
@@ -72,9 +75,11 @@ export const ParcelasMain = () => {
             </p>
           )}
         </div>
-        <Button onClick={() => setModalOpen(true)} size="md">
-          + Añadir parcela
-        </Button>
+        {puedeGestionar && (
+          <Button onClick={() => setModalOpen(true)} size="md">
+            + Añadir parcela
+          </Button>
+        )}
       </header>
 
       {error && (
@@ -93,9 +98,11 @@ export const ParcelasMain = () => {
           <p className={styles.parcelas__empty__text}>
             No hay parcelas en esta explotación.
           </p>
-          <Button onClick={() => setModalOpen(true)} variant="secondary">
-            Añadir primera parcela
-          </Button>
+          {puedeGestionar && (
+            <Button onClick={() => setModalOpen(true)} variant="secondary">
+              Añadir primera parcela
+            </Button>
+          )}
         </div>
       ) : (
         <div className={styles.parcelas__grid}>
@@ -105,6 +112,7 @@ export const ParcelasMain = () => {
               parcela={parcela}
               onClick={() => router.push(`/dashboard/parcelas/${parcela._id}`)}
               onDelete={() => handleParcelaDeleted(parcela._id)}
+              canDelete={puedeGestionar}
             />
           ))}
         </div>

@@ -1,7 +1,10 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { CHATBOT_ROUTE_PREFIX } from "./Chatbot.config.js";
 import { ChatbotController } from "./Chatbot.controller.js";
-import { ConversationNotFoundError } from "./Chatbot.interface.js";
+import {
+  ConversationNotFoundError,
+  ConversationForbiddenError,
+} from "./Chatbot.interface.js";
 import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 import type {
   CreateConversationRequest,
@@ -23,14 +26,34 @@ export default function ChatbotRoutes(
   fastify.post(
     `${CHATBOT_ROUTE_PREFIX}/conversations`,
     async (request: CreateConversationRequest, reply: FastifyReply) => {
-      return ChatbotController.create(request, reply);
+      try {
+        return await ChatbotController.create(request, reply);
+      } catch (error) {
+        if (error instanceof ConversationNotFoundError) {
+          return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof ConversationForbiddenError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
+      }
     },
   );
 
   fastify.get(
     `${CHATBOT_ROUTE_PREFIX}/conversations`,
     async (request: ListConversationsRequest, reply: FastifyReply) => {
-      return ChatbotController.list(request, reply);
+      try {
+        return await ChatbotController.list(request, reply);
+      } catch (error) {
+        if (error instanceof ConversationNotFoundError) {
+          return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof ConversationForbiddenError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
+      }
     },
   );
 
@@ -56,6 +79,9 @@ export default function ChatbotRoutes(
       } catch (error) {
         if (error instanceof ConversationNotFoundError) {
           return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof ConversationForbiddenError) {
+          return reply.status(403).send({ error: error.message });
         }
         if (error instanceof UsageLimitExceededError) {
           return reply.status(403).send({ error: error.message });

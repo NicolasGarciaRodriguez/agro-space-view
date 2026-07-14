@@ -1,13 +1,34 @@
 import type { FastifyReply } from "fastify";
 import { ChatbotService } from "./Chatbot.service.js";
-import type {
-  CreateConversationRequest,
-  SendMessageRequest,
-  GetConversationRequest,
-  ListConversationsRequest,
-  DeleteConversationRequest,
+import {
+  ConversationNotFoundError,
+  ConversationForbiddenError,
+  type CreateConversationRequest,
+  type SendMessageRequest,
+  type GetConversationRequest,
+  type ListConversationsRequest,
+  type DeleteConversationRequest,
 } from "./Chatbot.interface.js";
 import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
+import { NivelAcceso } from "@agrospace/shared/enums/NivelAcceso.enum";
+import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
+import { UserModel } from "../../schemas/User.schema.js";
+import { ExplotacionAccessService } from "../../services/explotacionAccess/ExplotacionAccess.service.js";
+import {
+  ExplotacionAccessDeniedError,
+  ExplotacionNotFoundForAccessError,
+} from "../../services/explotacionAccess/ExplotacionAccess.interface.js";
+
+const translateAccessError = (error: unknown): never => {
+  if (error instanceof ExplotacionNotFoundForAccessError) {
+    throw new ConversationNotFoundError();
+  }
+  if (error instanceof ExplotacionAccessDeniedError) {
+    throw new ConversationForbiddenError();
+  }
+  throw error;
+};
 
 const create = async (
   request: CreateConversationRequest,
@@ -15,6 +36,16 @@ const create = async (
 ) => {
   const { userId } = request.user;
   const { explotacionId, parcelaId } = request.body;
+
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      explotacionId,
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
+  }
 
   const conversation = await ChatbotService.createConversation(
     userId,
@@ -40,6 +71,16 @@ const list = async (request: ListConversationsRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId } = request.query;
 
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      explotacionId,
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
+  }
+
   const conversations = await ChatbotService.listConversations(
     userId,
     explotacionId,
@@ -55,10 +96,33 @@ const sendMessage = async (
   const { id } = request.params;
   const { message } = request.body;
 
-  // Bloquea ANTES de llamar a Sonnet
-  await UsageLimitsService.assertCanSendChatbotMessage(userId);
-
   const conversation = await ChatbotService.getConversation(userId, id);
+
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      conversation.explotacionId.toString(),
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
+  }
+
+  // El cupo de chatbot es de la explotación, medido contra el plan
+  // de su dueño — no contra quien escribe el mensaje.
+  const explotacion = await ExplotacionModel.findById(
+    conversation.explotacionId,
+  ).lean();
+  if (!explotacion) throw new ConversationNotFoundError();
+
+  const dueño = await UserModel.findById(explotacion.userId).lean();
+  if (!dueño) throw new ConversationNotFoundError();
+
+  await UsageLimitsService.assertCanSendChatbotMessage(
+    explotacion._id.toString(),
+    dueño.plan,
+    dueño.role === UserRole.ADMIN,
+  );
 
   const updated = await ChatbotService.sendMessage(
     userId,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AuthRepository } from "@agrospace/shared/repositories/Auth.repository";
 import { Input } from "@/components/input/Input.component";
@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth/Auth.store";
 
 export const LoginForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [email, setEmail] = useState("");
@@ -27,7 +28,9 @@ export const LoginForm = () => {
     try {
       const res = await AuthRepository.login({ email, password });
       setAuth(res.token, res.user);
-      router.push("/dashboard");
+
+      const redirect = searchParams.get("redirect");
+      router.push(redirect || "/dashboard");
     } catch (err) {
       setError(
         isHttpError(err)

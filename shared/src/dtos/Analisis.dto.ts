@@ -10,12 +10,12 @@ export type Bbox = [number, number, number, number];
 
 export interface AnalyseParamsDTO {
   tipo: IndiceTipo;
+  explotacionId: string;
   bbox: Bbox;
   dateFrom: string;
   dateTo: string;
   maxCloud?: number;
 }
-
 export interface AnalysisMetadataDTO {
   tipo: IndiceTipo;
   usedImageId: string;

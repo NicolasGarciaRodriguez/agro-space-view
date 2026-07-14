@@ -11,6 +11,7 @@ import { CuadernoFiltros } from "./components/cuadernoFiltros/CuadernoFiltros.co
 import { CuadernoCard } from "@/components/cuadernoCard/CuadernoCard.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
+import { canManage } from "@/lib/access";
 import type { CuadernoEntradaDTO } from "@agrospace/shared/dtos/CuadernoEntrada.dto";
 import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
 import type { CuadernoFiltrosValue } from "./components/cuadernoFiltros/CuadernoFiltros.interface";
@@ -20,6 +21,7 @@ import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 export const CuadernoMain = () => {
   const router = useRouter();
   const activeExplotacion = useExplotacionStore((s) => s.activeExplotacion);
+  const puedeGestionar = canManage(activeExplotacion?.nivelAcceso);
 
   const [entradas, setEntradas] = useState<CuadernoEntradaDTO[]>([]);
   const [parcelas, setParcelas] = useState<ParcelaDTO[]>([]);
@@ -169,7 +171,9 @@ export const CuadernoMain = () => {
           >
             📥 Exportar Excel
           </Button>
-          <Button onClick={() => setModalOpen(true)}>+ Nueva entrada</Button>
+          {puedeGestionar && (
+            <Button onClick={() => setModalOpen(true)}>+ Nueva entrada</Button>
+          )}
         </div>
       </header>
 
@@ -210,6 +214,7 @@ export const CuadernoMain = () => {
                 onParcelaClick={() =>
                   router.push(`/dashboard/parcelas/${entrada.parcelaId}`)
                 }
+                canManage={puedeGestionar}
               />
             ))}
           </div>

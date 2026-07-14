@@ -190,7 +190,6 @@ export const AnalisisMap = ({ parcel, analisis }: AnalisisMapProps) => {
 
     let timeoutId = setTimeout(addAnalisisLayer, 300);
 
-    // 🔑 Cancela el timeout si "analisis" cambia antes de que se dispare
     return () => clearTimeout(timeoutId);
   }, [analisis]);
   return (

@@ -4,21 +4,20 @@ import { InsightModel } from "../../schemas/Insight.schema.js";
 import { ConversationModel } from "../../schemas/Chatbot.schema.js";
 import { UserModel } from "../../schemas/User.schema.js";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 import { InsightTipo } from "@agrospace/shared/enums/InsightTipo.enum";
 import { ChatRole } from "@agrospace/shared/enums/ChatRole.enum";
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import { UsageLimitExceededError } from "./UsageLimits.interface.js";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
 import { PLAN_LIMITS } from "@agrospace/shared/config/PlanLimits.config";
+import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
 
-// Inicio del mes en curso (para límites mensuales)
 const startOfMonth = (): Date => {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1);
 };
 
-// Inicio de un periodo relativo en días (para el chatbot, que usa
-// "última semana" en vez de "mes natural")
 const startOfPeriod = (periodoDias: number): Date => {
   return new Date(Date.now() - periodoDias * 24 * 60 * 60 * 1000);
 };
@@ -41,7 +40,7 @@ const assertCanAnalyse = async (
   if (user.role === UserRole.ADMIN) return;
 
   const limite = PLAN_LIMITS[user.plan].analisisPorIndicePorMes;
-  if (limite === null) return; // ilimitado en este plan
+  if (limite === null) return;
 
   const count = await AnalisisModel.countDocuments({
     userId: new mongoose.Types.ObjectId(userId),
@@ -65,7 +64,7 @@ const canGenerateInsight = async (userId: string): Promise<boolean> => {
   if (user.role === UserRole.ADMIN) return true;
 
   const limite = PLAN_LIMITS[user.plan].insightsPorMes;
-  if (limite === null) return true; // ilimitado
+  if (limite === null) return true;
 
   const count = await InsightModel.countDocuments({
     userId: new mongoose.Types.ObjectId(userId),
@@ -77,28 +76,37 @@ const canGenerateInsight = async (userId: string): Promise<boolean> => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-//  CHATBOT — límite por periodo (semanal en Gratis, diario en Pro/Técnico)
+//  CHATBOT — límite por periodo, COMPARTIDO a nivel de explotación
 // ═══════════════════════════════════════════════════════════════════
 
-const assertCanSendChatbotMessage = async (userId: string): Promise<void> => {
-  const user = await getUserOrThrow(userId);
-  if (user.role === UserRole.ADMIN) return;
+// El cupo de mensajes es de la EXPLOTACIÓN, no de la persona que
+// escribe. Se mide siempre contra el plan del DUEÑO, y se cuentan
+// todos los mensajes de todas las conversaciones de esa explotación,
+// sin importar qué colaborador los haya escrito — así el dueño y
+// sus colaboradores comparten y agotan el mismo cupo.
+const assertCanSendChatbotMessage = async (
+  explotacionId: string,
+  planDelDueño: UserPlan,
+  dueñoEsAdmin: boolean,
+): Promise<void> => {
+  if (dueñoEsAdmin) return;
 
-  const config = PLAN_LIMITS[user.plan].chatbotMensajesPorPeriodo;
+  const config = PLAN_LIMITS[planDelDueño].chatbotMensajesPorPeriodo;
 
   if (config === null) {
     throw new UsageLimitExceededError(
-      "El chatbot no está disponible en tu plan actual. Actualiza a Pro para acceder al asistente IA.",
+      "El chatbot no está disponible en el plan de esta explotación. Actualiza a Pro para acceder al asistente IA.",
     );
   }
 
   const desde = startOfPeriod(config.periodoDias);
 
-  // Cuenta mensajes de usuario (no del assistant) en todas sus
-  // conversaciones, dentro del periodo. $unwind + $match sobre el
-  // array de mensajes embebido.
   const result = await ConversationModel.aggregate([
-    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+    {
+      $match: {
+        explotacionId: new mongoose.Types.ObjectId(explotacionId),
+      },
+    },
     { $unwind: "$messages" },
     {
       $match: {
@@ -117,10 +125,14 @@ const assertCanSendChatbotMessage = async (userId: string): Promise<void> => {
         ? "hoy"
         : `los últimos ${config.periodoDias} días`;
     throw new UsageLimitExceededError(
-      `Has alcanzado tu límite de ${config.cantidad} mensajes al chatbot (${periodoLabel}). Actualiza tu plan para más mensajes.`,
+      `Esta explotación ha alcanzado su límite de ${config.cantidad} mensajes al chatbot (${periodoLabel}), compartido entre el titular y sus colaboradores.`,
     );
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════
+//  PARCELAS — límite por explotación
+// ═══════════════════════════════════════════════════════════════════
 
 const assertCanCreateParcela = async (userId: string): Promise<void> => {
   const user = await getUserOrThrow(userId);
@@ -140,9 +152,38 @@ const assertCanCreateParcela = async (userId: string): Promise<void> => {
   }
 };
 
+const assertCanInviteToExplotacion = async (userId: string): Promise<void> => {
+  const user = await getUserOrThrow(userId);
+  if (user.role === UserRole.ADMIN) return;
+
+  if (user.plan !== UserPlan.TECNICO) {
+    throw new UsageLimitExceededError(
+      "Compartir explotaciones con colaboradores requiere el plan Técnico.",
+    );
+  }
+};
+
+const assertCanCreateExplotacion = async (userId: string): Promise<void> => {
+  const user = await getUserOrThrow(userId);
+  if (user.role === UserRole.ADMIN) return;
+
+  const limite = PLAN_LIMITS[user.plan].explotacionesMaximas;
+  if (limite === null) return;
+
+  const count = await ExplotacionModel.countDocuments({ userId });
+
+  if (count >= limite) {
+    throw new UsageLimitExceededError(
+      `Has alcanzado el límite de ${limite} explotación${limite === 1 ? "" : "es"} en tu plan actual. Actualiza al plan Técnico para gestionar varias explotaciones.`,
+    );
+  }
+};
+
 export const UsageLimitsService = {
   assertCanAnalyse,
   canGenerateInsight,
   assertCanSendChatbotMessage,
   assertCanCreateParcela,
+  assertCanInviteToExplotacion,
+  assertCanCreateExplotacion,
 };

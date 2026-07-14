@@ -32,14 +32,22 @@ export default function CuadernoEntradaRoutes(
   fastify.post(
     CUADERNO_ROUTE_PREFIX,
     async (request: CreateEntradaRequest, reply: FastifyReply) => {
-      return CuadernoEntradaController.create(request, reply);
+      try {
+        return await CuadernoEntradaController.create(request, reply);
+      } catch (error) {
+        return handleErrors(error, reply);
+      }
     },
   );
 
   fastify.get(
     CUADERNO_ROUTE_PREFIX,
     async (request: GetEntradasRequest, reply: FastifyReply) => {
-      return CuadernoEntradaController.getAll(request, reply);
+      try {
+        return await CuadernoEntradaController.getAll(request, reply);
+      } catch (error) {
+        return handleErrors(error, reply);
+      }
     },
   );
 

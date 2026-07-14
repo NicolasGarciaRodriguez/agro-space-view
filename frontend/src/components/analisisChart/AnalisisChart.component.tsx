@@ -1,4 +1,3 @@
-// AnalisisChart.component.tsx
 "use client";
 
 import {
@@ -27,7 +26,6 @@ const formatDate = (date: string): string => {
 
 const formatValue = (value: number): string => value.toFixed(3);
 
-// Busca en los ranges del índice el color y label correspondientes a un valor
 const getRangeFor = (value: number, indice: IndiceDefinitionDTO) =>
   indice.ranges.find((r) => value >= r.min && value < r.max) ??
   indice.ranges[indice.ranges.length - 1];

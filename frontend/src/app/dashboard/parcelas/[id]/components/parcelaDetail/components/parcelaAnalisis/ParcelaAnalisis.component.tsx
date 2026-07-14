@@ -1,4 +1,3 @@
-// ParcelaAnalisis.component.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -34,7 +33,6 @@ const formatPeriod = (from: string, to: string): string => {
   return `${f} — ${t}`;
 };
 
-// Busca el rango correspondiente en la definición del índice
 const getRangeFor = (value: number, indice?: IndiceDefinitionDTO) => {
   if (!indice) return { label: "—", color: "#999" };
   return (
@@ -50,7 +48,6 @@ export const ParcelaAnalisis = ({ parcelaId }: ParcelaAnalisisProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carga la lista de índices disponibles una sola vez
   useEffect(() => {
     AnalisisRepository.getIndices()
       .then(setIndices)

@@ -1,7 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth/Auth.store";
 import { useExplotacionStore } from "@/stores/explotacion/Explotacion.store";
+import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
+import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { InviteCollaboratorModal } from "@/components/inviteCollaboratorModal/InviteCollaboratorModal.component";
+import { AddExplotacionModal } from "@/components/addExplotacionModal/AddExplotacionModal.component";
 import { NAV_ITEMS } from "./Sidebar.config";
 import styles from "./Sidebar.module.scss";
 
@@ -14,13 +21,20 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const clearAuth = useAuthStore((s) => s.clearAuth);
-  const { activeExplotacion, explotaciones, setActiveExplotacion } =
+  const user = useAuthStore((s) => s.user);
+  const { activeExplotacion, explotaciones, setActiveExplotacion, addExplotacion } =
     useExplotacionStore();
+
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [addExplotacionOpen, setAddExplotacionOpen] = useState(false);
 
   const handleLogout = () => {
     clearAuth();
     router.push("/login");
   };
+
+  const canInvite =
+    user?.plan === UserPlan.TECNICO || user?.role === UserRole.ADMIN;
 
   return (
     <>
@@ -56,7 +70,23 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               </option>
             ))}
           </select>
+          <button
+            className={styles.selector__addButton}
+            onClick={() => setAddExplotacionOpen(true)}
+          >
+            + Nueva explotación
+          </button>
         </div>
+
+        {canInvite && (
+          <button
+            className={styles.sidebar__invite}
+            onClick={() => setInviteModalOpen(true)}
+          >
+            <span>👥</span>
+            <span>Invitar colaborador</span>
+          </button>
+        )}
 
         <nav className={styles.nav}>
           {NAV_ITEMS.map((item) => {
@@ -91,6 +121,24 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </button>
         </div>
       </aside>
+
+      {inviteModalOpen && (
+        <InviteCollaboratorModal
+          explotaciones={explotaciones}
+          onClose={() => setInviteModalOpen(false)}
+          onInvited={() => setInviteModalOpen(false)}
+        />
+      )}
+
+      {addExplotacionOpen && (
+        <AddExplotacionModal
+          onCreated={(nueva) => {
+            addExplotacion(nueva);
+            setAddExplotacionOpen(false);
+          }}
+          onClose={() => setAddExplotacionOpen(false)}
+        />
+      )}
     </>
   );
 };

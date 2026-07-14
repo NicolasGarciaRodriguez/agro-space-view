@@ -13,6 +13,7 @@ export const ParcelaCard = ({
   parcela,
   onClick,
   onDelete,
+  canDelete = true,
 }: ParcelaCardProps) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -30,13 +31,15 @@ export const ParcelaCard = ({
     <div className={styles.card} onClick={onClick}>
       <div className={styles.card__header}>
         <span className={styles.card__icon}>🌿</span>
-        <button
-          className={styles.card__delete}
-          onClick={handleDelete}
-          title={confirmDelete ? "Confirmar eliminación" : "Eliminar parcela"}
-        >
-          {confirmDelete ? "⚠ Confirmar" : "✕"}
-        </button>
+        {canDelete && (
+          <button
+            className={styles.card__delete}
+            onClick={handleDelete}
+            title={confirmDelete ? "Confirmar eliminación" : "Eliminar parcela"}
+          >
+            {confirmDelete ? "⚠ Confirmar" : "✕"}
+          </button>
+        )}
       </div>
 
       <div className={styles.card__body}>

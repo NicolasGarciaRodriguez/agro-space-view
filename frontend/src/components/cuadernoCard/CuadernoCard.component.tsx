@@ -19,6 +19,7 @@ export const CuadernoCard = ({
   variant = "default",
   parcela,
   onParcelaClick,
+  canManage = true,
 }: CuadernoCardProps) => {
   const config = TIPO_CONFIG[entrada.tipo];
   const isConfirmingDelete = confirmDeleteId === entrada._id;
@@ -62,29 +63,31 @@ export const CuadernoCard = ({
           ))}
       </div>
 
-      <div className={styles.card__actions}>
-        <button
-          className={styles.card__edit}
-          onClick={onEdit}
-          title="Editar entrada"
-        >
-          ✎
-        </button>
-        <button
-          className={[
-            styles.card__delete,
-            isConfirmingDelete ? styles["card__delete--confirm"] : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          onClick={onDeleteClick}
-          title={
-            isConfirmingDelete ? "Confirmar eliminación" : "Eliminar entrada"
-          }
-        >
-          {isConfirmingDelete ? "⚠ Confirmar" : "✕"}
-        </button>
-      </div>
+      {canManage && (
+        <div className={styles.card__actions}>
+          <button
+            className={styles.card__edit}
+            onClick={onEdit}
+            title="Editar entrada"
+          >
+            ✎
+          </button>
+          <button
+            className={[
+              styles.card__delete,
+              isConfirmingDelete ? styles["card__delete--confirm"] : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={onDeleteClick}
+            title={
+              isConfirmingDelete ? "Confirmar eliminación" : "Eliminar entrada"
+            }
+          >
+            {isConfirmingDelete ? "⚠ Confirmar" : "✕"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

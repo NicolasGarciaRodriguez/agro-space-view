@@ -44,3 +44,17 @@ export class InsightGenerationError extends Error {
     this.name = "InsightGenerationError";
   }
 }
+
+export class InsightNotFoundError extends Error {
+  constructor() {
+    super("Parcela o explotación no encontrada");
+    this.name = "InsightNotFoundError";
+  }
+}
+
+export class InsightForbiddenError extends Error {
+  constructor() {
+    super("No tienes permiso para acceder a este insight");
+    this.name = "InsightForbiddenError";
+  }
+}

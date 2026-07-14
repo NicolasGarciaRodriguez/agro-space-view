@@ -1,11 +1,14 @@
 import type { FastifyReply } from "fastify";
 import mongoose from "mongoose";
 import { AnalisisModel } from "../../schemas/Analisis.schema.js";
+import { ParcelaModel } from "../../schemas/Parcela.schema.js";
+import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
 import { S3Service } from "../../services/S3.service.js";
 import { AnalisisService } from "./Analisis.service.js";
 import { INDICES } from "./Analisis.config.js";
 import {
   AnalisisNotFoundError,
+  AnalisisForbiddenError,
   type AnalyseRequest,
   type GetTimeSeriesRequest,
   type CreateAnalisisRequest,
@@ -15,9 +18,39 @@ import {
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import { InsightsService } from "../insights/Insights.service.js";
 import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
+import { NivelAcceso } from "@agrospace/shared/enums/NivelAcceso.enum";
+import { ExplotacionAccessService } from "../../services/explotacionAccess/ExplotacionAccess.service.js";
+import {
+  ExplotacionAccessDeniedError,
+  ExplotacionNotFoundForAccessError,
+} from "../../services/explotacionAccess/ExplotacionAccess.interface.js";
 
 const isValidTipo = (tipo: string): tipo is IndiceTipo =>
   Object.values(IndiceTipo).includes(tipo as IndiceTipo);
+
+const translateAccessError = (error: unknown): never => {
+  if (error instanceof ExplotacionNotFoundForAccessError) {
+    throw new AnalisisNotFoundError();
+  }
+  if (error instanceof ExplotacionAccessDeniedError) {
+    throw new AnalisisForbiddenError();
+  }
+  throw error;
+};
+
+// Resuelve la explotación dueña de una parcela — necesario en los
+// endpoints que solo reciben parcelaId, no explotacionId, para poder
+// comprobar el acceso a nivel de explotación.
+const getExplotacionIdFromParcela = async (
+  parcelaId: string,
+): Promise<string> => {
+  if (!mongoose.isValidObjectId(parcelaId)) throw new AnalisisNotFoundError();
+  const parcela = await ParcelaModel.findById(parcelaId, {
+    explotacionId: 1,
+  }).lean();
+  if (!parcela) throw new AnalisisNotFoundError();
+  return parcela.explotacionId.toString();
+};
 
 // ═══════════════════════════════════════════════════════════════════
 //  CÁLCULO (Sentinel Hub)
@@ -28,15 +61,26 @@ const analyse = async (
   reply: FastifyReply,
 ): Promise<void> => {
   const { userId } = request.user;
-  const { tipo } = request.body;
+  const { tipo, explotacionId } = request.body;
 
   if (!isValidTipo(tipo)) {
     return reply.status(400).send({ error: `Índice no soportado: ${tipo}` });
   }
 
-  // Bloquea ANTES de llamar a Sentinel Hub, para no gastar la
-  // llamada si el usuario ya agotó su cupo.
-  await UsageLimitsService.assertCanAnalyse(userId, tipo);
+  let explotacion;
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      explotacionId,
+      NivelAcceso.GESTION,
+    );
+    explotacion = await ExplotacionModel.findById(explotacionId).lean();
+  } catch (error) {
+    translateAccessError(error);
+  }
+  if (!explotacion) throw new AnalisisNotFoundError();
+
+  await UsageLimitsService.assertCanAnalyse(explotacion.userId.toString(), tipo);
 
   const { image, metadata } = await AnalisisService.analyse(request.body);
 
@@ -97,12 +141,22 @@ const create = async (request: CreateAnalisisRequest, reply: FastifyReply) => {
     return reply.status(400).send({ error: `Índice no soportado: ${tipo}` });
   }
 
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      explotacionId,
+      NivelAcceso.GESTION,
+    );
+  } catch (error) {
+    translateAccessError(error);
+  }
+
   const imageBuffer = Buffer.from(imageBase64, "base64");
   const key = S3Service.generateKey(tipo, parcelaId, dateFrom, dateTo);
   const { url: imageUrl } = await S3Service.uploadBuffer(imageBuffer, key);
 
   const analisis = await AnalisisModel.create({
-    userId,
+    userId, // quién lo generó, a efectos de auditoría
     explotacionId,
     parcelaId,
     tipo,
@@ -117,8 +171,6 @@ const create = async (request: CreateAnalisisRequest, reply: FastifyReply) => {
     timeSeries,
   });
 
-  // Fire and forget: no bloquea la respuesta al usuario. Si falla,
-  // se loguea dentro del propio service y no afecta al guardado.
   InsightsService.maybeGenerateParcelaInsight(
     userId,
     explotacionId,
@@ -135,9 +187,18 @@ const getByParcela = async (
   const { userId } = request.user;
   const { parcelaId, tipo, limit = 10 } = request.query;
 
-  // El filtro por tipo es opcional: sin tipo devuelve todos los índices,
-  // con tipo devuelve solo ese índice.
-  const filter: Record<string, unknown> = { parcelaId, userId };
+  const explotacionId = await getExplotacionIdFromParcela(parcelaId);
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      explotacionId,
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
+  }
+
+  const filter: Record<string, unknown> = { parcelaId };
   if (tipo) {
     if (!isValidTipo(tipo)) {
       return reply.status(400).send({ error: `Índice no soportado: ${tipo}` });
@@ -163,8 +224,15 @@ const remove = async (request: DeleteAnalisisRequest, reply: FastifyReply) => {
 
   const analisis = await AnalisisModel.findById(id);
   if (!analisis) throw new AnalisisNotFoundError();
-  if (analisis.userId.toString() !== userId) {
-    throw new AnalisisNotFoundError();
+
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      analisis.explotacionId.toString(),
+      NivelAcceso.GESTION,
+    );
+  } catch (error) {
+    translateAccessError(error);
   }
 
   await analisis.deleteOne();

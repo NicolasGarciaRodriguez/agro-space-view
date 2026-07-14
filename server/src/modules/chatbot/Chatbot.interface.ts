@@ -44,3 +44,10 @@ export class ConversationNotFoundError extends Error {
     this.name = "ConversationNotFoundError";
   }
 }
+
+export class ConversationForbiddenError extends Error {
+  constructor() {
+    super("No tienes permiso para acceder a esta conversación");
+    this.name = "ConversationForbiddenError";
+  }
+}

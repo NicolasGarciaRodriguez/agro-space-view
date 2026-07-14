@@ -11,4 +11,5 @@ export interface CuadernoCardProps {
   variant?: CuadernoCardVariant;
   parcela?: ParcelaDTO;
   onParcelaClick?: () => void;
+  canManage?: boolean;
 }

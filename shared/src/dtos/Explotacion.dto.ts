@@ -1,3 +1,5 @@
+import { ExplotacionAccessRole } from "../enums/ExplotacionAccessRole.enum.js";
+
 export interface CreateExplotacionDTO {
   nombre: string;
   provincia: string;
@@ -19,6 +21,7 @@ export interface ExplotacionDTO {
   provincia: string;
   municipio: string;
   descripcion?: string;
+  nivelAcceso: ExplotacionAccessRole;
   createdAt: string;
   updatedAt: string;
 }

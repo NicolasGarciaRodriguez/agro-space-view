@@ -2,7 +2,10 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { ANALISIS_ROUTE_PREFIX } from "./Analisis.config.js";
 import { AnalisisController } from "./Analisis.controller.js";
 import { NoImagesFoundError } from "./Analisis.service.js";
-import { AnalisisNotFoundError } from "./Analisis.interface.js";
+import {
+  AnalisisNotFoundError,
+  AnalisisForbiddenError,
+} from "./Analisis.interface.js";
 import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
 import type {
   AnalyseRequest,
@@ -33,6 +36,12 @@ export default function AnalisisRoutes(
           return reply.status(404).send({ error: error.message });
         }
         if (error instanceof UsageLimitExceededError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        if (error instanceof AnalisisNotFoundError) {
+          return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof AnalisisForbiddenError) {
           return reply.status(403).send({ error: error.message });
         }
         throw error;
@@ -66,14 +75,34 @@ export default function AnalisisRoutes(
   fastify.post(
     ANALISIS_ROUTE_PREFIX,
     async (request: CreateAnalisisRequest, reply: FastifyReply) => {
-      return AnalisisController.create(request, reply);
+      try {
+        return await AnalisisController.create(request, reply);
+      } catch (error) {
+        if (error instanceof AnalisisNotFoundError) {
+          return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof AnalisisForbiddenError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
+      }
     },
   );
 
   fastify.get(
     ANALISIS_ROUTE_PREFIX,
     async (request: GetAnalisisRequest, reply: FastifyReply) => {
-      return AnalisisController.getByParcela(request, reply);
+      try {
+        return await AnalisisController.getByParcela(request, reply);
+      } catch (error) {
+        if (error instanceof AnalisisNotFoundError) {
+          return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof AnalisisForbiddenError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
+      }
     },
   );
 
@@ -85,6 +114,9 @@ export default function AnalisisRoutes(
       } catch (error) {
         if (error instanceof AnalisisNotFoundError) {
           return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof AnalisisForbiddenError) {
+          return reply.status(403).send({ error: error.message });
         }
         throw error;
       }

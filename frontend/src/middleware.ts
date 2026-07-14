@@ -6,6 +6,7 @@ const ALWAYS_ACCESSIBLE_ROUTES = [
   "/verify-email",
   "/forgot-password",
   "/reset-password",
+  "/invitations/accept",
 ];
 const DASHBOARD_ROUTE = "/dashboard";
 

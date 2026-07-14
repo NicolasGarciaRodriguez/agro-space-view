@@ -10,6 +10,8 @@ import { AnalisisLegend } from "@/components/analisisMap/components/analisisLege
 import { DateRangePicker } from "@/components/dateRangePicker/DateRangePicker.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
+import { canManage } from "@/lib/access";
+import { useExplotacionStore } from "@/stores/explotacion/Explotacion.store";
 import type { DateRangeValue } from "@/components/dateRangePicker/DateRangePicker.component";
 import type { AnalysisResult } from "@agrospace/shared/repositories/Analisis.repository";
 import type { WeatherSummaryDTO } from "@agrospace/shared/dtos/Weather.dto";
@@ -19,11 +21,10 @@ import type {
   IndiceDefinitionDTO,
 } from "@agrospace/shared/dtos/Analisis.dto";
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
-import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
 import { DEFAULT_DATE_RANGE } from "./ParcelaAnalisisMapa.config";
 import styles from "./ParcelaAnalisisMapa.module.scss";
-import { INDICE_ICONS } from "@agrospace/shared/config/IndiceVisuals.config";
 import { IndiceTipoSelector } from "@/components/indiceTipoSelector/IndiceTipoSelector.component";
+import type { ParcelaAnalisisMapaProps } from "./ParcelaAnalisisMapa.interface";
 
 const AnalisisMap = dynamic(
   () =>
@@ -38,15 +39,11 @@ const AnalisisMap = dynamic(
   },
 );
 
-interface ParcelaAnalisisMapaProps {
-  parcela: ParcelaDTO;
-}
-
 function getErrorMessage(err: unknown, fallback: string): string {
   return isHttpError(err) ? (err.message ?? fallback) : fallback;
 }
 
-const toMapParcel = (parcela: ParcelaDTO) => ({
+const toMapParcel = (parcela: ParcelaAnalisisMapaProps["parcela"]) => ({
   ref: parcela.refCatastral,
   area: parcela.superficie,
   description: parcela.description ?? "",
@@ -70,6 +67,9 @@ const formatAnalisisLabel = (analisis: AnalisisDTO): string => {
 };
 
 export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
+  const activeExplotacion = useExplotacionStore((s) => s.activeExplotacion);
+  const puedeGestionar = canManage(activeExplotacion?.nivelAcceso);
+
   const [indices, setIndices] = useState<IndiceDefinitionDTO[]>([]);
   const [tipoActivo, setTipoActivo] = useState<IndiceTipo>(IndiceTipo.NDVI);
 
@@ -96,14 +96,12 @@ export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
 
   const indiceActivo = indices.find((i) => i.tipo === tipoActivo);
 
-  // Carga la lista de índices disponibles una sola vez
   useEffect(() => {
     AnalisisRepository.getIndices()
       .then(setIndices)
       .catch(() => {});
   }, []);
 
-  // Carga el histórico del tipo activo cada vez que cambia parcela o tipo
   useEffect(() => {
     const loadHistorial = async () => {
       setIsLoadingHistory(true);
@@ -130,7 +128,6 @@ export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
     };
   }, [analisisResult?.imageUrl]);
 
-  // Reset al cambiar de parcela
   useEffect(() => {
     setAnalisisResult(null);
     setWeatherResult(null);
@@ -168,6 +165,7 @@ export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
       const [analisis, weather, timeSeries] = await Promise.all([
         AnalisisRepository.analyse({
           tipo: tipoActivo,
+          explotacionId: parcela.explotacionId,
           bbox: parcela.bbox,
           dateFrom: dateRange.dateFrom,
           dateTo: dateRange.dateTo,
@@ -272,12 +270,12 @@ export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
         <h2 className={styles.analisis__title}>Análisis satelital</h2>
 
         {indices.length > 0 && (
-            <IndiceTipoSelector
-              indices={indices}
-              tipoActivo={tipoActivo}
-              onChange={handleChangeTipo}
-              disabled={isLoading}
-            />
+          <IndiceTipoSelector
+            indices={indices}
+            tipoActivo={tipoActivo}
+            onChange={handleChangeTipo}
+            disabled={isLoading}
+          />
         )}
       </div>
 
@@ -313,20 +311,22 @@ export const ParcelaAnalisisMapa = ({ parcela }: ParcelaAnalisisMapaProps) => {
         </div>
       )}
 
-      <div className={styles.analisis__controls}>
-        <DateRangePicker
-          value={dateRange}
-          onChange={setDateRange}
-          disabled={isLoading}
-        />
-        <Button
-          onClick={handleAnalyse}
-          loading={isLoading}
-          disabled={isLoading}
-        >
-          Analizar {indiceActivo?.label ?? tipoActivo.toUpperCase()}
-        </Button>
-      </div>
+      {puedeGestionar && (
+        <div className={styles.analisis__controls}>
+          <DateRangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            disabled={isLoading}
+          />
+          <Button
+            onClick={handleAnalyse}
+            loading={isLoading}
+            disabled={isLoading}
+          >
+            Analizar {indiceActivo?.label ?? tipoActivo.toUpperCase()}
+          </Button>
+        </div>
+      )}
 
       {error && (
         <p className={styles.analisis__error} role="alert">

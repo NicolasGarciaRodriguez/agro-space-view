@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { CuadernoEntradaRepository } from "@agrospace/shared/repositories/CuadernoEntrada.repository";
-import { CuadernoExportRepository } from "@agrospace/shared/repositories/CuadernoExport.repository";
 import { AddEntradaCuadernoModal } from "@/components/addEntradaCuadernoModal/AddEntradaCuadernoModal.component";
 import { Button } from "@/components/button/Button.component";
 import { CuadernoCard } from "@/components/cuadernoCard/CuadernoCard.component";
 import { isHttpError } from "@/lib/http-error";
+import { canManage } from "@/lib/access";
+import { useExplotacionStore } from "@/stores/explotacion/Explotacion.store";
 import type { CuadernoEntradaDTO } from "@agrospace/shared/dtos/CuadernoEntrada.dto";
 import type { ParcelaCuadernoProps } from "./ParcelaCuaderno.interface";
 import styles from "./ParcelaCuaderno.module.scss";
@@ -15,6 +16,9 @@ export const ParcelaCuaderno = ({
   parcelaId,
   explotacionId,
 }: ParcelaCuadernoProps) => {
+  const activeExplotacion = useExplotacionStore((s) => s.activeExplotacion);
+  const puedeGestionar = canManage(activeExplotacion?.nivelAcceso);
+
   const [entradas, setEntradas] = useState<CuadernoEntradaDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,40 +78,15 @@ export const ParcelaCuaderno = ({
     }
   };
 
-  const handleExport = async () => {
-    setError(null);
-    setIsExporting(true);
-    try {
-      await CuadernoExportRepository.exportParcela(parcelaId);
-    } catch (err) {
-      setError(
-        isHttpError(err)
-          ? (err.message ?? "Error al exportar el cuaderno.")
-          : "Error al exportar el cuaderno.",
-      );
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   return (
     <section className={styles.cuaderno}>
       <div className={styles.cuaderno__header}>
         <h2 className={styles.cuaderno__title}>Cuaderno de campo</h2>
-        <div className={styles.cuaderno__headerActions}>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleExport}
-            loading={isExporting}
-            disabled={entradas.length === 0}
-          >
-            📥 Exportar
-          </Button>
+        {puedeGestionar && (
           <Button size="sm" onClick={() => setModalOpen(true)}>
             + Nueva entrada
           </Button>
-        </div>
+        )}
       </div>
 
       {error && (
@@ -127,13 +106,15 @@ export const ParcelaCuaderno = ({
             No hay entradas en el cuaderno. Registra riegos, fertilizaciones,
             tratamientos y cosechas.
           </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setModalOpen(true)}
-          >
-            Añadir primera entrada
-          </Button>
+          {puedeGestionar && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setModalOpen(true)}
+            >
+              Añadir primera entrada
+            </Button>
+          )}
         </div>
       ) : (
         <div className={styles.cuaderno__list}>
@@ -145,6 +126,7 @@ export const ParcelaCuaderno = ({
               confirmDeleteId={confirmDeleteId}
               onEdit={() => setEntradaToEdit(entrada)}
               onDeleteClick={() => handleDeleteClick(entrada._id)}
+              canManage={puedeGestionar}
             />
           ))}
         </div>

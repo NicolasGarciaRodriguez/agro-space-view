@@ -75,8 +75,8 @@ export const DashboardMain = () => {
         ]);
         setParcelas(parcelasData);
         setStats(statsData);
-        console.log("stats:", statsData); // ← añade esto
-        console.log("parcelas:", parcelasData); // ← y esto
+        console.log("stats:", statsData); 
+        console.log("parcelas:", parcelasData);
       } catch {
         setParcelas([]);
       }
@@ -99,7 +99,6 @@ export const DashboardMain = () => {
 
   const superficieTotal = parcelas.reduce((acc, p) => acc + p.superficie, 0);
 
-  // Determina si hay alerta de NDVI
   const hayAlerta =
     !alertaDismissed &&
     stats?.parcelaPeor != null &&

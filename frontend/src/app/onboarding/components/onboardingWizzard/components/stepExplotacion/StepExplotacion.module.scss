@@ -25,30 +25,4 @@
     color: oklch(0.58 0 0);
     line-height: 1.6;
   }
-
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  &__row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-
-    @media (max-width: $mobile) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  &__error {
-    font-size: 0.875rem;
-    color: oklch(0.7 0.18 25);
-    text-align: center;
-    padding: 0.625rem 0.875rem;
-    background: oklch(0.5 0.18 25 / 0.1);
-    border: 1px solid oklch(0.5 0.18 25 / 0.2);
-    border-radius: var(--radius-md);
-  }
 }

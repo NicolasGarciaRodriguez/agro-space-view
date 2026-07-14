@@ -11,6 +11,7 @@ import {
 import { ChatRole } from "@agrospace/shared/enums/ChatRole.enum";
 import { ChatbotTool } from "@agrospace/shared/enums/ChatbotTool.enum";
 import { InsightTipo } from "@agrospace/shared/enums/InsightTipo.enum";
+import { NivelAcceso } from "@agrospace/shared/enums/NivelAcceso.enum";
 import {
   CHATBOT_MODEL,
   CHATBOT_MAX_TOKENS,
@@ -21,17 +22,19 @@ import { ConversationNotFoundError } from "./Chatbot.interface.js";
 import type { AnthropicMessage } from "../../services/Anthropic.service.js";
 import { TIPO_CULTIVO_LABELS } from "@agrospace/shared/config/TipoCultivoLabels.config";
 import { MANEJO_CULTIVO_LABELS } from "@agrospace/shared/config/ManejoCultivoLabels.config";
+import { ExplotacionAccessService } from "../../services/explotacionAccess/ExplotacionAccess.service.js";
 
 type LeanConversation = FlattenMaps<IConversationDocument> & {
   _id: mongoose.Types.ObjectId;
 };
 
+// Ya NO recibe userId — un colaborador debe ver TODAS las parcelas
+// de la explotación compartida, no solo las que él mismo creó.
 const buildExplotacionSummary = async (
-  userId: string,
   explotacionId: string,
   parcelaActivaId: string | null,
 ): Promise<string> => {
-  const parcelas = await ParcelaModel.find({ explotacionId, userId }).lean();
+  const parcelas = await ParcelaModel.find({ explotacionId }).lean();
 
   if (parcelas.length === 0) {
     return "La explotación todavía no tiene parcelas registradas.";
@@ -96,21 +99,36 @@ const buildExplotacionSummary = async (
 
   return `Parcelas (${parcelas.length}):\n${parcelasText}${insightText}`;
 };
+
 // ═══════════════════════════════════════════════════════════════════
 //  TOOLS — ejecución real contra Mongo
 // ═══════════════════════════════════════════════════════════════════
 
-const assertParcelaOwnership = async (
+// Antes: assertParcelaOwnership (comprobaba parcela.userId === userId)
+// Ahora: resuelve la explotación de la parcela y comprueba acceso a
+// nivel de explotación, para que un colaborador con acceso legítimo
+// pueda usar las tools sobre parcelas que no creó él mismo.
+const assertParcelaAccess = async (
   userId: string,
   parcelaId: string,
 ): Promise<void> => {
   if (!mongoose.isValidObjectId(parcelaId)) {
     throw new Error("ID de parcela inválido");
   }
-  const parcela = await ParcelaModel.exists({ _id: parcelaId, userId });
+  const parcela = await ParcelaModel.findById(parcelaId, {
+    explotacionId: 1,
+  }).lean();
   if (!parcela) {
-    throw new Error("Parcela no encontrada o no pertenece al usuario");
+    throw new Error("Parcela no encontrada");
   }
+  // Lanza si no tiene acceso. El mensaje aquí es genérico porque este
+  // error se convierte en texto para el modelo (dentro de la tool),
+  // no en una respuesta HTTP directa.
+  await ExplotacionAccessService.checkAccess(
+    userId,
+    parcela.explotacionId.toString(),
+    NivelAcceso.CONSULTA,
+  );
 };
 
 const executeGetHistorialParcela = async (
@@ -120,7 +138,7 @@ const executeGetHistorialParcela = async (
   const parcelaId = input.parcelaId as string;
   const tipo = input.tipo as string | undefined;
 
-  await assertParcelaOwnership(userId, parcelaId);
+  await assertParcelaAccess(userId, parcelaId);
 
   const filter: Record<string, unknown> = { parcelaId };
   if (tipo) filter.tipo = tipo;
@@ -153,7 +171,7 @@ const executeGetCuadernoParcela = async (
   const parcelaId = input.parcelaId as string;
   const tipoEntrada = input.tipoEntrada as string | undefined;
 
-  await assertParcelaOwnership(userId, parcelaId);
+  await assertParcelaAccess(userId, parcelaId);
 
   const filter: Record<string, unknown> = { parcelaId };
   if (tipoEntrada) filter.tipo = tipoEntrada;
@@ -188,7 +206,7 @@ const executeGetInsightParcela = async (
 ): Promise<string> => {
   const parcelaId = input.parcelaId as string;
 
-  await assertParcelaOwnership(userId, parcelaId);
+  await assertParcelaAccess(userId, parcelaId);
 
   const insight = await InsightModel.findOne({
     parcelaId,
@@ -282,6 +300,8 @@ const generateTitulo = (firstMessage: string): string => {
 const isValidChatbotTool = (tool: string): tool is ChatbotTool =>
   Object.values(ChatbotTool).includes(tool as ChatbotTool);
 
+// Ya no recibe userId como parámetro separado para el contexto —
+// buildExplotacionSummary ya no lo necesita.
 const sendMessage = async (
   userId: string,
   explotacionId: string,
@@ -301,7 +321,6 @@ const sendMessage = async (
   });
 
   const contextoLigero = await buildExplotacionSummary(
-    userId,
     explotacionId,
     conversation.parcelaId ? conversation.parcelaId.toString() : null,
   );

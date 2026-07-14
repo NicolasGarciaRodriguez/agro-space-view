@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AuthRepository } from "@agrospace/shared/repositories/Auth.repository";
 import {
@@ -16,6 +16,7 @@ import { useAuthStore } from "@/stores/auth/Auth.store";
 
 export const RegisterForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [form, setForm] = useState({
@@ -59,7 +60,11 @@ export const RegisterForm = () => {
         telefono: form.telefono || undefined,
       });
       setAuth(res.token, res.user);
-      router.push("/onboarding");
+
+      // Si viene de una invitación (u otro flujo con redirect), no
+      // pasa por el onboarding — va directamente a donde se le esperaba.
+      const redirect = searchParams.get("redirect");
+      router.push(redirect || "/onboarding");
     } catch (err) {
       setError(
         isHttpError(err)

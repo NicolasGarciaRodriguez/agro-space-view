@@ -4,4 +4,5 @@ export interface ParcelaCardProps {
   parcela: ParcelaDTO;
   onClick: () => void;
   onDelete: () => void;
+  canDelete?: boolean;
 }

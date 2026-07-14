@@ -15,7 +15,7 @@
 .sidebar {
   width: 260px;
   height: 100vh;
-  height: 100dvh; // ← fallback progresivo: dvh donde esté soportado
+  height: 100dvh;
   position: fixed;
   left: 0;
   top: 0;
@@ -97,6 +97,26 @@
       background: oklch(1 0 0 / 0.04);
     }
   }
+
+  &__invite {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0.5rem 0.75rem;
+    padding: 8px 10px;
+    font-size: 0.875rem;
+    color: oklch(0.65 0.12 150);
+    background: oklch(0.55 0.15 150 / 0.08);
+    border: 1px solid oklch(0.55 0.15 150 / 0.15);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  
+    &:hover {
+      background: oklch(0.55 0.15 150 / 0.14);
+    }
+  }
 }
 
 .selector {
@@ -130,6 +150,25 @@
 
     option {
       background: oklch(0.16 0.01 220);
+    }
+  }
+
+  &__addButton {
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px 8px;
+    font-size: 0.8125rem;
+    color: oklch(0.6 0.1 150);
+    background: none;
+    border: 1px dashed oklch(0.55 0.15 150 / 0.3);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  
+    &:hover {
+      background: oklch(0.55 0.15 150 / 0.08);
+      border-color: oklch(0.55 0.15 150 / 0.5);
     }
   }
 }

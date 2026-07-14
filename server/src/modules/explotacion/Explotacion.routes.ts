@@ -11,6 +11,7 @@ import {
   GetExplotacionStatsRequest,
 } from "./Explotacion.interface.js";
 import { authenticate, requireVerifiedEmail } from "../../middleware/Auth.middleware.js";
+import { UsageLimitExceededError } from "../usageLimits/UsageLimits.interface.js";
 
 export default function ExplotacionRoutes(
   fastify: FastifyInstance,
@@ -47,7 +48,14 @@ export default function ExplotacionRoutes(
   fastify.post(
     EXPLOTACION_ROUTE_PREFIX,
     async (request: CreateExplotacionRequest, reply: FastifyReply) => {
-      return ExplotacionController.create(request, reply);
+      try {
+        return await ExplotacionController.create(request, reply);
+      } catch (error) {
+        if (error instanceof UsageLimitExceededError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
+      }
     },
   );
 

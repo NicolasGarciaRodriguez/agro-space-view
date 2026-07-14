@@ -7,6 +7,7 @@ import type { FastifyRequest } from "fastify";
 
 export interface AnalyseBody {
   tipo: IndiceTipo;
+  explotacionId: string;
   bbox: number[];
   dateFrom: string;
   dateTo: string;
@@ -141,5 +142,12 @@ export class AnalisisNotFoundError extends Error {
   constructor() {
     super("Análisis no encontrado");
     this.name = "AnalisisNotFoundError";
+  }
+}
+
+export class AnalisisForbiddenError extends Error {
+  constructor() {
+    super("No tienes permiso para acceder a este análisis");
+    this.name = "AnalisisForbiddenError";
   }
 }

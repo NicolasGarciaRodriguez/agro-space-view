@@ -5,6 +5,11 @@ import { ParcelaModel } from "../../schemas/Parcela.schema.js";
 import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 import { TIPO_CULTIVO_LABELS } from "@agrospace/shared/config/TipoCultivoLabels.config";
 import { ExportForbiddenError } from "./CuadernoExport.interface.js";
+import { NivelAcceso } from "@agrospace/shared/enums/NivelAcceso.enum";
+import {
+  ExplotacionAccessService,
+} from "../../services/explotacionAccess/ExplotacionAccess.service.js";
+import { ExplotacionAccessDeniedError, ExplotacionNotFoundForAccessError } from "../../services/explotacionAccess/ExplotacionAccess.interface.js";
 
 // ═══════════════════════════════════════════════════════════════════
 //  CONSTRUCCIÓN DE UNA HOJA POR PARCELA
@@ -137,6 +142,17 @@ const buildDateFilter = (dateFrom?: string, dateTo?: string) => {
   return filter;
 };
 
+
+const translateAccessError = (error: unknown): never => {
+  if (error instanceof ExplotacionNotFoundForAccessError) {
+    throw new ExportForbiddenError();
+  }
+  if (error instanceof ExplotacionAccessDeniedError) {
+    throw new ExportForbiddenError();
+  }
+  throw error;
+};
+
 // ═══════════════════════════════════════════════════════════════════
 //  EXPORTACIÓN POR PARCELA
 // ═══════════════════════════════════════════════════════════════════
@@ -151,8 +167,18 @@ const exportParcela = async (
     throw new ExportForbiddenError();
   }
 
-  const parcela = await ParcelaModel.findOne({ _id: parcelaId, userId }).lean();
+  const parcela = await ParcelaModel.findById(parcelaId).lean();
   if (!parcela) throw new ExportForbiddenError();
+
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      parcela.explotacionId.toString(),
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
+  }
 
   const filter: Record<string, unknown> = {
     parcelaId,
@@ -198,7 +224,17 @@ const exportExplotacion = async (
     throw new ExportForbiddenError();
   }
 
-  const parcelas = await ParcelaModel.find({ explotacionId, userId }).lean();
+  try {
+    await ExplotacionAccessService.checkAccess(
+      userId,
+      explotacionId,
+      NivelAcceso.CONSULTA,
+    );
+  } catch (error) {
+    translateAccessError(error);
+  }
+
+  const parcelas = await ParcelaModel.find({ explotacionId }).lean();
   if (parcelas.length === 0) throw new ExportForbiddenError();
 
   const parcelaIds = parcelas.map((p) => p._id);
@@ -216,7 +252,6 @@ const exportExplotacion = async (
   workbook.creator = "AgroSpaceView";
   workbook.created = new Date();
 
-  // Una hoja por parcela, en el mismo orden en que se crearon
   for (const parcela of parcelas) {
     const entradasParcela = entradas.filter(
       (e) => e.parcelaId.toString() === parcela._id.toString(),

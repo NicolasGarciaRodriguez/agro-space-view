@@ -8,6 +8,7 @@ import { InsightModel } from "../../schemas/Insight.schema.js";
 import { ConversationModel } from "../../schemas/Chatbot.schema.js";
 import { CatastroService } from "../catastro/Catastro.service.js";
 import { ManejoCultivo } from "@agrospace/shared/enums/ManejoCultivo.enum";
+import { NivelAcceso } from "@agrospace/shared/enums/NivelAcceso.enum";
 import {
   ParcelaNotFoundError,
   ParcelaForbiddenError,
@@ -20,19 +21,37 @@ import {
 } from "./Parcela.interface.js";
 import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
 import { S3Service } from "../../services/S3.service.js";
+import {
+  ExplotacionAccessDeniedError,
+  ExplotacionNotFoundForAccessError,
+} from "../../services/explotacionAccess/ExplotacionAccess.interface.js";
+import { ExplotacionAccessService } from "../../services/explotacionAccess/ExplotacionAccess.service.js";
 
-const verifyExplotacion = async (explotacionId: string, userId: string) => {
-  if (!mongoose.isValidObjectId(explotacionId)) {
+const translateAccessError = (error: unknown): never => {
+  if (error instanceof ExplotacionNotFoundForAccessError) {
     throw new ParcelaNotFoundError();
   }
-  const explotacion = await ExplotacionModel.findById(explotacionId).lean();
-  if (!explotacion) throw new ParcelaNotFoundError();
-  if (explotacion.userId.toString() !== userId) {
+  if (error instanceof ExplotacionAccessDeniedError) {
     throw new ParcelaForbiddenError();
   }
-  return explotacion;
+  throw error;
 };
 
+const verifyExplotacionAccess = async (
+  explotacionId: string,
+  userId: string,
+  nivelMinimo: NivelAcceso,
+) => {
+  try {
+    await ExplotacionAccessService.checkAccess(userId, explotacionId, nivelMinimo);
+  } catch (error) {
+    translateAccessError(error);
+  }
+
+  // Devolvemos la explotación completa porque `create` necesita sus
+  // datos (provincia, municipio) para construir la parcela.
+  return ExplotacionModel.findById(explotacionId).lean();
+};
 
 const cascadeDeleteParcela = async (
   parcelaId: mongoose.Types.ObjectId,
@@ -60,9 +79,9 @@ const getAll = async (request: GetParcelasRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId } = request.params;
 
-  await verifyExplotacion(explotacionId, userId);
+  await verifyExplotacionAccess(explotacionId, userId, NivelAcceso.CONSULTA);
 
-  const parcelas = await ParcelaModel.find({ explotacionId, userId })
+  const parcelas = await ParcelaModel.find({ explotacionId })
     .sort({ createdAt: -1 })
     .lean();
 
@@ -73,13 +92,14 @@ const getById = async (request: GetParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId, id } = request.params;
 
-  await verifyExplotacion(explotacionId, userId);
+  await verifyExplotacionAccess(explotacionId, userId, NivelAcceso.CONSULTA);
 
   if (!mongoose.isValidObjectId(id)) throw new ParcelaNotFoundError();
 
   const parcela = await ParcelaModel.findById(id).lean();
   if (!parcela) throw new ParcelaNotFoundError();
-  if (parcela.userId.toString() !== userId) throw new ParcelaForbiddenError();
+  // Ya no comprobamos parcela.userId — el acceso a la explotación es
+  // lo que autoriza, no quién creó la parcela originalmente.
 
   return reply.send(parcela);
 };
@@ -89,9 +109,17 @@ const create = async (request: CreateParcelaRequest, reply: FastifyReply) => {
   const { explotacionId } = request.params;
   const { nombre, refCatastral, tipoCultivo, variedad, manejo } = request.body;
 
-  const explotacion = await verifyExplotacion(explotacionId, userId);
+  const explotacion = await verifyExplotacionAccess(
+    explotacionId,
+    userId,
+    NivelAcceso.GESTION,
+  );
+  if (!explotacion) throw new ParcelaNotFoundError();
 
-  await UsageLimitsService.assertCanCreateParcela(userId);
+  // El límite de plan se aplica siempre al DUEÑO de la explotación,
+  // no a quien la gestiona — es su plan el que define cuántas
+  // parcelas caben, sin importar quién las cree materialmente.
+  await UsageLimitsService.assertCanCreateParcela(explotacion.userId.toString());
 
   const existing = await ParcelaModel.findOne({ explotacionId, refCatastral });
   if (existing) throw new ParcelaAlreadyExistsError();
@@ -101,7 +129,7 @@ const create = async (request: CreateParcelaRequest, reply: FastifyReply) => {
   });
 
   const parcela = await ParcelaModel.create({
-    userId,
+    userId, // quién la creó materialmente, a efectos de auditoría
     explotacionId,
     nombre,
     refCatastral: catastro.ref,
@@ -124,13 +152,12 @@ const update = async (request: UpdateParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId, id } = request.params;
 
-  await verifyExplotacion(explotacionId, userId);
+  await verifyExplotacionAccess(explotacionId, userId, NivelAcceso.GESTION);
 
   if (!mongoose.isValidObjectId(id)) throw new ParcelaNotFoundError();
 
   const parcela = await ParcelaModel.findById(id);
   if (!parcela) throw new ParcelaNotFoundError();
-  if (parcela.userId.toString() !== userId) throw new ParcelaForbiddenError();
 
   Object.assign(parcela, request.body);
   await parcela.save();
@@ -142,13 +169,12 @@ const remove = async (request: DeleteParcelaRequest, reply: FastifyReply) => {
   const { userId } = request.user;
   const { explotacionId, id } = request.params;
 
-  await verifyExplotacion(explotacionId, userId);
+  await verifyExplotacionAccess(explotacionId, userId, NivelAcceso.GESTION);
 
   if (!mongoose.isValidObjectId(id)) throw new ParcelaNotFoundError();
 
   const parcela = await ParcelaModel.findById(id);
   if (!parcela) throw new ParcelaNotFoundError();
-  if (parcela.userId.toString() !== userId) throw new ParcelaForbiddenError();
 
   await cascadeDeleteParcela(parcela._id);
   await parcela.deleteOne();

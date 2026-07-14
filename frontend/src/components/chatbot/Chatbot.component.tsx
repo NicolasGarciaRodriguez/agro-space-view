@@ -101,7 +101,6 @@ export const Chatbot = () => {
       );
       setConversation(updated);
     } catch (err) {
-      // revierte el mensaje optimista y muestra el motivo
       setConversation(currentConversation);
       setError(
         isHttpError(err)
