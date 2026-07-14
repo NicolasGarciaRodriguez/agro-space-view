@@ -3,3 +3,8 @@ export interface NavItem {
   label: string;
   icon: string;
 }
+
+export interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}

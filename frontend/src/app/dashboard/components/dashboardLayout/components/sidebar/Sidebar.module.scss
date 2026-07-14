@@ -171,6 +171,23 @@
       border-color: oklch(0.55 0.15 150 / 0.5);
     }
   }
+
+  &__deleteButton {
+    width: 100%;
+    margin-top: 4px;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    color: oklch(0.6 0.15 25 / 0.7);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s;
+  
+    &:hover {
+      color: oklch(0.7 0.18 25);
+    }
+  }
 }
 
 .nav {

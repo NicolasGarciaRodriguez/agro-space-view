@@ -9,24 +9,29 @@ import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
 import { InviteCollaboratorModal } from "@/components/inviteCollaboratorModal/InviteCollaboratorModal.component";
 import { AddExplotacionModal } from "@/components/addExplotacionModal/AddExplotacionModal.component";
+import { DeleteExplotacionModal } from "@/components/deleteExplotacionModal/DeleteExplotacionModal.component";
+import { isOwner } from "@/lib/access";
 import { NAV_ITEMS } from "./Sidebar.config";
 import styles from "./Sidebar.module.scss";
+import { SidebarProps } from "./Sidebar.interface";
 
-interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const user = useAuthStore((s) => s.user);
-  const { activeExplotacion, explotaciones, setActiveExplotacion, addExplotacion } =
-    useExplotacionStore();
+  const {
+    activeExplotacion,
+    explotaciones,
+    setActiveExplotacion,
+    addExplotacion,
+    removeExplotacion,
+  } = useExplotacionStore();
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [addExplotacionOpen, setAddExplotacionOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const handleLogout = () => {
     clearAuth();
@@ -35,6 +40,8 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
   const canInvite =
     user?.plan === UserPlan.TECNICO || user?.role === UserRole.ADMIN;
+
+  const puedeEliminar = isOwner(activeExplotacion?.nivelAcceso);
 
   return (
     <>
@@ -76,6 +83,14 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           >
             + Nueva explotación
           </button>
+          {activeExplotacion && puedeEliminar && (
+            <button
+              className={styles.selector__deleteButton}
+              onClick={() => setDeleteModalOpen(true)}
+            >
+              🗑 Eliminar esta explotación
+            </button>
+          )}
         </div>
 
         {canInvite && (
@@ -137,6 +152,18 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             setAddExplotacionOpen(false);
           }}
           onClose={() => setAddExplotacionOpen(false)}
+        />
+      )}
+
+      {deleteModalOpen && activeExplotacion && (
+        <DeleteExplotacionModal
+          explotacionId={activeExplotacion._id}
+          explotacionNombre={activeExplotacion.nombre}
+          onDeleted={() => {
+            removeExplotacion(activeExplotacion._id);
+            setDeleteModalOpen(false);
+          }}
+          onClose={() => setDeleteModalOpen(false)}
         />
       )}
     </>

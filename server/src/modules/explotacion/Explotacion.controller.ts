@@ -26,6 +26,7 @@ import {
   ExplotacionAccessDeniedError,
   ExplotacionNotFoundForAccessError,
 } from "../../services/explotacionAccess/ExplotacionAccess.interface.js";
+import { CascadeDeleteService } from "../../services/cascadeDelete/CascadeDelete.service.js";
 
 const translateAccessError = (error: unknown): never => {
   if (error instanceof ExplotacionNotFoundForAccessError) {
@@ -155,9 +156,8 @@ const remove = async (
     throw new ExplotacionForbiddenError();
   }
 
+  await CascadeDeleteService.cascadeDeleteExplotacion(explotacion._id);
   await explotacion.deleteOne();
-
-  await ExplotacionMiembroModel.deleteMany({ explotacionId: id });
 
   return reply.status(204).send();
 };

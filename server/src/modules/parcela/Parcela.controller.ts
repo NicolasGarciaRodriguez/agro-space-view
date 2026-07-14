@@ -2,10 +2,6 @@ import type { FastifyReply } from "fastify";
 import mongoose from "mongoose";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
 import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
-import { AnalisisModel } from "../../schemas/Analisis.schema.js";
-import { CuadernoEntradaModel } from "../../schemas/CuadernoEntrada.schema.js";
-import { InsightModel } from "../../schemas/Insight.schema.js";
-import { ConversationModel } from "../../schemas/Chatbot.schema.js";
 import { CatastroService } from "../catastro/Catastro.service.js";
 import { ManejoCultivo } from "@agrospace/shared/enums/ManejoCultivo.enum";
 import { NivelAcceso } from "@agrospace/shared/enums/NivelAcceso.enum";
@@ -20,12 +16,12 @@ import {
   type DeleteParcelaRequest,
 } from "./Parcela.interface.js";
 import { UsageLimitsService } from "../usageLimits/UsageLimits.service.js";
-import { S3Service } from "../../services/S3.service.js";
 import {
   ExplotacionAccessDeniedError,
   ExplotacionNotFoundForAccessError,
 } from "../../services/explotacionAccess/ExplotacionAccess.interface.js";
 import { ExplotacionAccessService } from "../../services/explotacionAccess/ExplotacionAccess.service.js";
+import { CascadeDeleteService } from "../../services/cascadeDelete/CascadeDelete.service.js";
 
 const translateAccessError = (error: unknown): never => {
   if (error instanceof ExplotacionNotFoundForAccessError) {
@@ -53,27 +49,6 @@ const verifyExplotacionAccess = async (
   return ExplotacionModel.findById(explotacionId).lean();
 };
 
-const cascadeDeleteParcela = async (
-  parcelaId: mongoose.Types.ObjectId,
-): Promise<void> => {
-  const analisis = await AnalisisModel.find({ parcelaId }, { imageUrl: 1 }).lean();
-  const s3Keys = analisis
-    .map((a) => S3Service.keyFromUrl(a.imageUrl))
-    .filter((key): key is string => key !== null);
-
-  await Promise.all([
-    AnalisisModel.deleteMany({ parcelaId }),
-    CuadernoEntradaModel.deleteMany({ parcelaId }),
-    InsightModel.deleteMany({ parcelaId }),
-    ConversationModel.updateMany({ parcelaId }, { $set: { parcelaId: null } }),
-  ]);
-
-  try {
-    await S3Service.deleteObjects(s3Keys);
-  } catch (error) {
-    console.error(`⚠️ Error borrando ${s3Keys.length} imágenes de S3:`, error);
-  }
-};
 
 const getAll = async (request: GetParcelasRequest, reply: FastifyReply) => {
   const { userId } = request.user;
@@ -176,7 +151,7 @@ const remove = async (request: DeleteParcelaRequest, reply: FastifyReply) => {
   const parcela = await ParcelaModel.findById(id);
   if (!parcela) throw new ParcelaNotFoundError();
 
-  await cascadeDeleteParcela(parcela._id);
+  await CascadeDeleteService.cascadeDeleteParcela(parcela._id);
   await parcela.deleteOne();
 
   return reply.status(204).send();
