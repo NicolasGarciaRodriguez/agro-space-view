@@ -39,7 +39,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
   const handleLogout = () => {
     clearAuth();
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   const canInvite =
