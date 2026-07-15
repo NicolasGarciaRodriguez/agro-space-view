@@ -113,7 +113,10 @@ const create = async (
     descripcion,
   });
 
-  return reply.status(201).send(explotacion);
+  return reply.status(201).send({
+    ...explotacion.toObject(),
+    nivelAcceso: ExplotacionAccessRole.OWNER,
+  });
 };
 
 const update = async (

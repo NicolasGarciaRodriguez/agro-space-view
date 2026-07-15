@@ -7,14 +7,18 @@ import { useAuthStore } from "@/stores/auth/Auth.store";
 import { useExplotacionStore } from "@/stores/explotacion/Explotacion.store";
 import { UserPlan } from "@agrospace/shared/enums/UserPlan.enum";
 import { UserRole } from "@agrospace/shared/enums/UserRole.enum";
+import { PLAN_LIMITS } from "@agrospace/shared/config/PlanLimits.config";
 import { InviteCollaboratorModal } from "@/components/inviteCollaboratorModal/InviteCollaboratorModal.component";
 import { AddExplotacionModal } from "@/components/addExplotacionModal/AddExplotacionModal.component";
 import { DeleteExplotacionModal } from "@/components/deleteExplotacionModal/DeleteExplotacionModal.component";
 import { isOwner } from "@/lib/access";
 import { NAV_ITEMS } from "./Sidebar.config";
 import styles from "./Sidebar.module.scss";
-import { SidebarProps } from "./Sidebar.interface";
 
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const pathname = usePathname();
@@ -42,6 +46,19 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     user?.plan === UserPlan.TECNICO || user?.role === UserRole.ADMIN;
 
   const puedeEliminar = isOwner(activeExplotacion?.nivelAcceso);
+
+  // Solo cuenta explotaciones propias contra el límite del plan — las
+  // compartidas por un colaborador no ocupan cupo del usuario actual.
+  const explotacionesPropias = explotaciones.filter(
+    (ex) => ex.userId === user?.id,
+  ).length;
+  const explotacionesMaximas = user
+    ? PLAN_LIMITS[user.plan].explotacionesMaximas
+    : null;
+  const puedeCrearExplotacion =
+    user?.role === UserRole.ADMIN ||
+    explotacionesMaximas === null ||
+    explotacionesPropias < explotacionesMaximas;
 
   return (
     <>
@@ -77,12 +94,14 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               </option>
             ))}
           </select>
-          <button
-            className={styles.selector__addButton}
-            onClick={() => setAddExplotacionOpen(true)}
-          >
-            + Nueva explotación
-          </button>
+          {puedeCrearExplotacion && (
+            <button
+              className={styles.selector__addButton}
+              onClick={() => setAddExplotacionOpen(true)}
+            >
+              + Nueva explotación
+            </button>
+          )}
           {activeExplotacion && puedeEliminar && (
             <button
               className={styles.selector__deleteButton}
