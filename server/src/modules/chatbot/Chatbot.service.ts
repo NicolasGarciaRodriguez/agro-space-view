@@ -1,5 +1,5 @@
 import mongoose, { type FlattenMaps } from "mongoose";
-import { AnthropicService } from "../../services/Anthropic.service.js";
+import { AnthropicService } from "../../services/anthropic/Anthropic.service.js";
 import { AnalisisModel } from "../../schemas/Analisis.schema.js";
 import { CuadernoEntradaModel } from "../../schemas/CuadernoEntrada.schema.js";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
@@ -19,7 +19,7 @@ import {
   CHATBOT_SYSTEM_PROMPT_TEMPLATE,
 } from "./Chatbot.config.js";
 import { ConversationNotFoundError } from "./Chatbot.interface.js";
-import type { AnthropicMessage } from "../../services/Anthropic.service.js";
+import type { AnthropicMessage } from "../../services/anthropic/Anthropic.interface.js";
 import { TIPO_CULTIVO_LABELS } from "@agrospace/shared/config/TipoCultivoLabels.config";
 import { MANEJO_CULTIVO_LABELS } from "@agrospace/shared/config/ManejoCultivoLabels.config";
 import { ExplotacionAccessService } from "../../services/explotacionAccess/ExplotacionAccess.service.js";
@@ -28,8 +28,6 @@ type LeanConversation = FlattenMaps<IConversationDocument> & {
   _id: mongoose.Types.ObjectId;
 };
 
-// Ya NO recibe userId — un colaborador debe ver TODAS las parcelas
-// de la explotación compartida, no solo las que él mismo creó.
 const buildExplotacionSummary = async (
   explotacionId: string,
   parcelaActivaId: string | null,
@@ -104,10 +102,6 @@ const buildExplotacionSummary = async (
 //  TOOLS — ejecución real contra Mongo
 // ═══════════════════════════════════════════════════════════════════
 
-// Antes: assertParcelaOwnership (comprobaba parcela.userId === userId)
-// Ahora: resuelve la explotación de la parcela y comprueba acceso a
-// nivel de explotación, para que un colaborador con acceso legítimo
-// pueda usar las tools sobre parcelas que no creó él mismo.
 const assertParcelaAccess = async (
   userId: string,
   parcelaId: string,
@@ -121,9 +115,6 @@ const assertParcelaAccess = async (
   if (!parcela) {
     throw new Error("Parcela no encontrada");
   }
-  // Lanza si no tiene acceso. El mensaje aquí es genérico porque este
-  // error se convierte en texto para el modelo (dentro de la tool),
-  // no en una respuesta HTTP directa.
   await ExplotacionAccessService.checkAccess(
     userId,
     parcela.explotacionId.toString(),
@@ -300,14 +291,19 @@ const generateTitulo = (firstMessage: string): string => {
 const isValidChatbotTool = (tool: string): tool is ChatbotTool =>
   Object.values(ChatbotTool).includes(tool as ChatbotTool);
 
-// Ya no recibe userId como parámetro separado para el contexto —
-// buildExplotacionSummary ya no lo necesita.
-const sendMessage = async (
+// Prepara todo lo común a ambas variantes (con y sin streaming):
+// añade el mensaje de usuario a la conversación, construye el
+// contexto ligero, y arma el array de mensajes para Anthropic.
+const prepareSendMessage = async (
   userId: string,
   explotacionId: string,
   conversationId: string,
   userMessage: string,
-): Promise<IConversationDocument> => {
+): Promise<{
+  conversation: IConversationDocument;
+  systemPrompt: string;
+  anthropicMessages: AnthropicMessage[];
+}> => {
   const conversation = await getConversation(userId, conversationId);
 
   if (conversation.messages.length === 0) {
@@ -333,6 +329,42 @@ const sendMessage = async (
     }),
   );
 
+  return { conversation, systemPrompt, anthropicMessages };
+};
+
+// Añade la respuesta del asistente a la conversación y persiste.
+const appendAssistantMessage = async (
+  conversation: IConversationDocument,
+  finalText: string,
+  toolCalls: Array<{ tool: string; input: Record<string, unknown> }>,
+): Promise<IConversationDocument> => {
+  conversation.messages.push({
+    role: ChatRole.ASSISTANT,
+    content: finalText,
+    toolCalls:
+      toolCalls.length > 0
+        ? toolCalls
+            .filter((tc) => isValidChatbotTool(tc.tool))
+            .map((tc) => ({ tool: tc.tool as ChatbotTool, input: tc.input }))
+        : undefined,
+    createdAt: new Date(),
+  });
+
+  await conversation.save();
+  return conversation;
+};
+
+// Variante SIN streaming — se mantiene tal cual porque ya funciona
+// y puede seguir usándose si en algún momento hace falta.
+const sendMessage = async (
+  userId: string,
+  explotacionId: string,
+  conversationId: string,
+  userMessage: string,
+): Promise<IConversationDocument> => {
+  const { conversation, systemPrompt, anthropicMessages } =
+    await prepareSendMessage(userId, explotacionId, conversationId, userMessage);
+
   const result = await AnthropicService.generateWithTools({
     model: CHATBOT_MODEL,
     maxTokens: CHATBOT_MAX_TOKENS,
@@ -342,20 +374,34 @@ const sendMessage = async (
     executeTool: buildExecuteTool(userId),
   });
 
-  conversation.messages.push({
-    role: ChatRole.ASSISTANT,
-    content: result.finalText,
-    toolCalls:
-      result.toolCalls.length > 0
-        ? result.toolCalls
-            .filter((tc) => isValidChatbotTool(tc.tool))
-            .map((tc) => ({ tool: tc.tool as ChatbotTool, input: tc.input }))
-        : undefined,
-    createdAt: new Date(),
+  return appendAssistantMessage(conversation, result.finalText, result.toolCalls);
+};
+
+// Variante CON streaming — usa generateWithToolsStream y reenvía cada
+// fragmento de texto mediante el callback onToken, según Anthropic lo
+// va generando. Al final, persiste la conversación igual que la
+// versión sin streaming.
+const sendMessageStream = async (
+  userId: string,
+  explotacionId: string,
+  conversationId: string,
+  userMessage: string,
+  onToken: (text: string) => void,
+): Promise<IConversationDocument> => {
+  const { conversation, systemPrompt, anthropicMessages } =
+    await prepareSendMessage(userId, explotacionId, conversationId, userMessage);
+
+  const result = await AnthropicService.generateWithToolsStream({
+    model: CHATBOT_MODEL,
+    maxTokens: CHATBOT_MAX_TOKENS,
+    systemPrompt,
+    messages: anthropicMessages,
+    tools: CHATBOT_TOOLS,
+    executeTool: buildExecuteTool(userId),
+    onToken,
   });
 
-  await conversation.save();
-  return conversation;
+  return appendAssistantMessage(conversation, result.finalText, result.toolCalls);
 };
 
 const removeConversation = async (
@@ -371,5 +417,6 @@ export const ChatbotService = {
   getConversation,
   listConversations,
   sendMessage,
+  sendMessageStream,
   removeConversation,
 };

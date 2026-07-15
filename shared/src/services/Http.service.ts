@@ -7,6 +7,8 @@ export const setTokenGetter = (getter: () => string | null) => {
   tokenGetter = getter;
 };
 
+export const getAuthToken = (): string | null => tokenGetter?.() ?? null;
+
 export const setBaseUrl = (url: string) => {
   baseUrl = url.replace(/\/$/, ""); // sin barra final, coherente con el resto
 };

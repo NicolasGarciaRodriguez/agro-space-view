@@ -12,6 +12,7 @@ import { UsageLimitExceededError } from "./UsageLimits.interface.js";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";
 import { PLAN_LIMITS } from "@agrospace/shared/config/PlanLimits.config";
 import { ExplotacionModel } from "../../schemas/Explotacion.schema.js";
+import { RATE_LIMIT_MAX_MESSAGES, RATE_LIMIT_WINDOW_MINUTES } from "./UsageLimits.config.js";
 
 const startOfMonth = (): Date => {
   const now = new Date();
@@ -179,6 +180,30 @@ const assertCanCreateExplotacion = async (userId: string): Promise<void> => {
   }
 };
 
+const assertNotRateLimited = async (userId: string): Promise<void> => {
+  const desde = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60 * 1000);
+
+  const result = await ConversationModel.aggregate([
+    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+    { $unwind: "$messages" },
+    {
+      $match: {
+        "messages.role": ChatRole.USER,
+        "messages.createdAt": { $gte: desde },
+      },
+    },
+    { $count: "total" },
+  ]);
+
+  const count = result[0]?.total ?? 0;
+
+  if (count >= RATE_LIMIT_MAX_MESSAGES) {
+    throw new UsageLimitExceededError(
+      "Estás enviando mensajes demasiado rápido. Espera un momento antes de continuar.",
+    );
+  }
+};
+
 export const UsageLimitsService = {
   assertCanAnalyse,
   canGenerateInsight,
@@ -186,4 +211,5 @@ export const UsageLimitsService = {
   assertCanCreateParcela,
   assertCanInviteToExplotacion,
   assertCanCreateExplotacion,
+  assertNotRateLimited,
 };

@@ -1,5 +1,5 @@
 import mongoose, { type FlattenMaps } from "mongoose";
-import { AnthropicService } from "../../services/Anthropic.service.js";
+import { AnthropicService } from "../../services/anthropic/Anthropic.service.js";
 import { AnalisisModel } from "../../schemas/Analisis.schema.js";
 import { CuadernoEntradaModel } from "../../schemas/CuadernoEntrada.schema.js";
 import { ParcelaModel } from "../../schemas/Parcela.schema.js";

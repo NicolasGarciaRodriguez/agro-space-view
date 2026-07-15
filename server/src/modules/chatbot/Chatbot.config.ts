@@ -1,7 +1,7 @@
 import { ChatbotTool } from "@agrospace/shared/enums/ChatbotTool.enum";
 import { IndiceTipo } from "@agrospace/shared/enums/IndiceTipo.enum";
 import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
-import type { AnthropicTool } from "../../services/Anthropic.service.js";
+import type { AnthropicTool } from "../../services/anthropic/Anthropic.interface.js";
 
 export const CHATBOT_ROUTE_PREFIX = "/api/chatbot" as const;
 

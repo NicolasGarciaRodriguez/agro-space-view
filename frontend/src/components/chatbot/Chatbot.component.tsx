@@ -24,11 +24,15 @@ export const Chatbot = () => {
   const [isSending, setIsSending] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Texto del asistente que se está generando en vivo, mientras
+  // llegan los fragmentos del stream. Se pinta como un mensaje
+  // adicional debajo de los ya guardados en `conversation`.
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation?.messages.length]);
+  }, [conversation?.messages.length, streamingText]);
 
   useEffect(() => {
     setConversation(null);
@@ -81,6 +85,7 @@ export const Chatbot = () => {
 
     setInput("");
     setIsSending(true);
+    setStreamingText("");
 
     setConversation({
       ...currentConversation,
@@ -95,9 +100,13 @@ export const Chatbot = () => {
     });
 
     try {
-      const updated = await ChatbotRepository.sendMessage(
+      const updated = await ChatbotRepository.sendMessageStream(
         currentConversation._id,
         { message },
+        (token) => {
+          // Cada fragmento se va acumulando y repintando en vivo.
+          setStreamingText((prev) => (prev ?? "") + token);
+        },
       );
       setConversation(updated);
     } catch (err) {
@@ -109,6 +118,7 @@ export const Chatbot = () => {
       );
     } finally {
       setIsSending(false);
+      setStreamingText(null);
     }
   };
 
@@ -156,7 +166,14 @@ export const Chatbot = () => {
               ))
             )}
 
-            {isSending && (
+            {/* Mensaje del asistente en construcción, mientras llega
+                el streaming. Solo se muestra cuando ya hay algo de
+                texto — antes de eso, se ve el indicador de "escribiendo". */}
+            {streamingText && (
+              <ChatbotMessage role={ChatRole.ASSISTANT} content={streamingText} />
+            )}
+
+            {isSending && !streamingText && (
               <div className={styles.chatbot__typing}>
                 <span />
                 <span />

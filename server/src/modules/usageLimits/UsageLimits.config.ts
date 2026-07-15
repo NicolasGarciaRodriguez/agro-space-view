@@ -1,0 +1,2 @@
+export const RATE_LIMIT_MAX_MESSAGES = 10;
+export const RATE_LIMIT_WINDOW_MINUTES = 1;

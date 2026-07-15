@@ -105,5 +105,25 @@ export default function ChatbotRoutes(
     },
   );
 
+  fastify.post(
+    `${CHATBOT_ROUTE_PREFIX}/conversations/:id/messages/stream`,
+    async (request: SendMessageRequest, reply: FastifyReply) => {
+      try {
+        return await ChatbotController.sendMessageStream(request, reply);
+      } catch (error) {
+        if (error instanceof ConversationNotFoundError) {
+          return reply.status(404).send({ error: error.message });
+        }
+        if (error instanceof ConversationForbiddenError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        if (error instanceof UsageLimitExceededError) {
+          return reply.status(403).send({ error: error.message });
+        }
+        throw error;
+      }
+    },
+  );
+
   done();
 }
