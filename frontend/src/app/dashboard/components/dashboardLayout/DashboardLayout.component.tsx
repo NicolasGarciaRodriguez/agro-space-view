@@ -9,12 +9,16 @@ import { EmailBlockScreen } from "@/components/emailBlockScreen/EmailBlockScreen
 import { AuthRepository } from "@agrospace/shared/repositories/Auth.repository";
 import { useAuthStore } from "@/stores/auth/Auth.store";
 import { useEmailBlockStore } from "@/stores/emailBlock/EmailBlock.store";
+import { EmailVerificationStatus } from "@agrospace/shared/enums/EmailVerificationStatus.enum";
 import styles from "./DashboardLayout.module.scss";
 import { DashboardLayoutProps } from "./DashboardLayout.interface";
+
+const VERIFICATION_POLL_INTERVAL_MS = 30_000;
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const isBlocked = useEmailBlockStore((s) => s.isBlocked);
 
@@ -24,6 +28,21 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       .then((freshUser) => setAuth(token, freshUser))
       .catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    if (user?.emailVerificationStatus === EmailVerificationStatus.VERIFICADO) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      AuthRepository.getMe()
+        .then((freshUser) => setAuth(token, freshUser))
+        .catch(() => {});
+    }, VERIFICATION_POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [token, user?.emailVerificationStatus]);
 
   if (isBlocked) {
     return <EmailBlockScreen />;
