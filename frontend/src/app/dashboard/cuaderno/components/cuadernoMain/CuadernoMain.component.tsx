@@ -247,7 +247,6 @@ export const CuadernoMain = () => {
 
       {modalOpen && (
         <AddEntradaCuadernoModal
-          parcelaId={filtros.parcelaId || (parcelas[0]?._id ?? "")}
           explotacionId={activeExplotacion._id}
           onCreated={handleEntradaCreated}
           onClose={() => setModalOpen(false)}

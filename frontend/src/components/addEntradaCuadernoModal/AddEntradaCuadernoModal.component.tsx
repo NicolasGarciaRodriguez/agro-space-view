@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CuadernoEntradaRepository } from "@agrospace/shared/repositories/CuadernoEntrada.repository";
+import { ParcelaRepository } from "@agrospace/shared/repositories/Parcela.repository";
 import { Input } from "@/components/input/Input.component";
 import { Button } from "@/components/button/Button.component";
 import { isHttpError } from "@/lib/http-error";
@@ -16,6 +17,7 @@ import {
 } from "./AddEntradaCuadernoModal.interface";
 import { validateEntradas } from "./AddEntradaCuadernoModal.config";
 import type { EntradaDatosDTO } from "@agrospace/shared/dtos/CuadernoEntrada.dto";
+import type { ParcelaDTO } from "@agrospace/shared/dtos/Parcela.dto";
 import styles from "./AddEntradaCuadernoModal.module.scss";
 import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
@@ -25,7 +27,7 @@ const TIPOS = Object.entries(TIPO_CONFIG) as [
 ][];
 
 export const AddEntradaCuadernoModal = ({
-  parcelaId,
+  parcelaId: parcelaIdFija,
   explotacionId,
   entradaToEdit,
   onCreated,
@@ -33,6 +35,18 @@ export const AddEntradaCuadernoModal = ({
 }: AddEntradaCuadernoModalProps) => {
   const isEditing = !!entradaToEdit;
   const today = new Date().toISOString().split("T")[0];
+
+  // Si viene una parcelaId fija (contexto ya conocido) o estamos
+  // editando (la entrada ya tiene su parcela), no hace falta selector.
+  const requiereSelectorParcela = !parcelaIdFija && !isEditing;
+
+  const [parcelas, setParcelas] = useState<ParcelaDTO[]>([]);
+  const [parcelaIdSeleccionada, setParcelaIdSeleccionada] = useState(
+    parcelaIdFija ?? entradaToEdit?.parcelaId ?? "",
+  );
+  const [isLoadingParcelas, setIsLoadingParcelas] = useState(
+    requiereSelectorParcela,
+  );
 
   const [tipo, setTipo] = useState<EntradaTipo>(
     entradaToEdit?.tipo ?? EntradaTipo.RIEGO,
@@ -50,6 +64,18 @@ export const AddEntradaCuadernoModal = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const datos = datosPorTipo[tipo] ?? {};
+
+  useEffect(() => {
+    if (!requiereSelectorParcela) return;
+    setIsLoadingParcelas(true);
+    ParcelaRepository.getAll(explotacionId)
+      .then((data) => {
+        setParcelas(data);
+        if (data.length === 1) setParcelaIdSeleccionada(data[0]._id);
+      })
+      .catch(() => setParcelas([]))
+      .finally(() => setIsLoadingParcelas(false));
+  }, [requiereSelectorParcela, explotacionId]);
 
   const handleTipoChange = (newTipo: EntradaTipo) => {
     if (isEditing) return;
@@ -79,11 +105,16 @@ export const AddEntradaCuadernoModal = ({
     e.preventDefault();
     setError(null);
 
+    if (requiereSelectorParcela && !parcelaIdSeleccionada) {
+      setError("Selecciona una parcela para esta entrada.");
+      return;
+    }
+
     if (isEditing) {
-      const { validateEntradas: _, ...validators } =
-        await import("./AddEntradaCuadernoModal.config");
-      const singleValidator = { [tipo]: datosPorTipo[tipo] ?? {} };
-      const validationError = validateEntradas(singleValidator, fecha);
+      const validationError = validateEntradas(
+        { [tipo]: datosPorTipo[tipo] ?? {} },
+        fecha,
+      );
       if (validationError) {
         setError(validationError);
         return;
@@ -99,7 +130,7 @@ export const AddEntradaCuadernoModal = ({
     setIsLoading(true);
 
     try {
-      if (isEditing) {
+      if (isEditing && entradaToEdit) {
         await CuadernoEntradaRepository.update(entradaToEdit._id, {
           fecha,
           datos: datosPorTipo[tipo] ?? {},
@@ -121,7 +152,7 @@ export const AddEntradaCuadernoModal = ({
         await Promise.all(
           entradasACrear.map(([t, d]) =>
             CuadernoEntradaRepository.create({
-              parcelaId,
+              parcelaId: parcelaIdSeleccionada,
               explotacionId,
               fecha,
               tipo: t,
@@ -182,6 +213,40 @@ export const AddEntradaCuadernoModal = ({
         </header>
 
         <form className={styles.modal__form} onSubmit={handleSubmit} noValidate>
+          {requiereSelectorParcela && (
+            <div className={styles.parcelaSelector}>
+              <label
+                className={styles.parcelaSelector__label}
+                htmlFor="parcela"
+              >
+                Parcela
+              </label>
+              <select
+                id="parcela"
+                className={styles.parcelaSelector__select}
+                value={parcelaIdSeleccionada}
+                onChange={(e) => setParcelaIdSeleccionada(e.target.value)}
+                disabled={isLoading || isLoadingParcelas}
+                required
+              >
+                {isLoadingParcelas ? (
+                  <option value="">Cargando parcelas…</option>
+                ) : (
+                  <>
+                    <option value="" disabled>
+                      Selecciona una parcela
+                    </option>
+                    {parcelas.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </>
+                )}
+              </select>
+            </div>
+          )}
+
           <div className={styles.tipos}>
             {TIPOS.map(([key, config]) => (
               <button

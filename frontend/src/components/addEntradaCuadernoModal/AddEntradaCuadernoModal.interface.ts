@@ -5,7 +5,7 @@ import type {
 import { EntradaTipo } from "@agrospace/shared/enums/EntradaTipo.enum";
 
 export interface AddEntradaCuadernoModalProps {
-  parcelaId: string;
+  parcelaId?: string;
   explotacionId: string;
   entradaToEdit?: CuadernoEntradaDTO;
   onCreated: () => void;
